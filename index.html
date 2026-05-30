@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests"
+    />
+    <meta
+      http-equiv="Permissions-Policy"
+      content="camera=(), geolocation=(), payment=(), usb=(), microphone=(self)"
+    />
+    <meta name="referrer" content="no-referrer" />
+    <title>Snoopy Voice Browser</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell" aria-labelledby="page-title">
+      <section class="hero">
+        <p class="eyebrow">Warm voice search for Toby</p>
+        <h1 id="page-title">Hi Toby, I am Snoopy.</h1>
+        <p class="lede">
+          Say a search phrase and I will happily browse the internet for it.
+          I keep my spoken replies kind, polite, and family friendly.
+        </p>
+      </section>
+
+      <section class="agent-card" aria-label="Voice browsing controls">
+        <div class="status-row">
+          <div>
+            <p class="label">Agent status</p>
+            <p id="statusText" class="status-text">Ready when you are, Toby.</p>
+          </div>
+          <div id="listeningIndicator" class="indicator" aria-hidden="true"></div>
+        </div>
+
+        <div class="controls">
+          <label class="field">
+            <span>Search engine</span>
+            <select id="searchEngine">
+              <option value="duckduckgo">DuckDuckGo</option>
+              <option value="google">Google</option>
+              <option value="bing">Bing</option>
+            </select>
+          </label>
+
+          <div class="button-row">
+            <button id="startButton" type="button">Start voice agent</button>
+            <button id="stopButton" type="button" class="secondary" disabled>
+              Stop listening
+            </button>
+          </div>
+        </div>
+
+        <div class="transcript-panel">
+          <p class="label">Last thing I heard</p>
+          <p id="transcriptText" class="transcript">
+            Nothing yet. Try saying "search sunrise photos".
+          </p>
+        </div>
+
+        <div id="fallbackPanel" class="fallback-panel" hidden>
+          <p id="fallbackText"></p>
+          <a id="fallbackLink" class="fallback-link" target="_blank" rel="noopener noreferrer">
+            Open search results
+          </a>
+        </div>
+      </section>
+
+      <section class="handoff-card" aria-labelledby="handoff-title">
+        <div>
+          <p class="eyebrow">Private continuity</p>
+          <h2 id="handoff-title">Transfer notes for a future agent</h2>
+          <p>
+            Snoopy does not save your voice transcript, settings, or searches in
+            browser storage. If a future agent needs context, Toby can download a
+            private handoff file on demand.
+          </p>
+        </div>
+
+        <div class="privacy-grid">
+          <label class="checkbox-field">
+            <input id="includeTranscript" type="checkbox" />
+            <span>Include the last heard phrase in the handoff file</span>
+          </label>
+          <div class="button-row">
+            <button id="downloadHandoffButton" type="button" class="secondary">
+              Download private handoff
+            </button>
+            <button id="clearDataButton" type="button" class="secondary">
+              Clear screen data
+            </button>
+          </div>
+        </div>
+
+        <p id="privacyStatus" class="privacy-status" role="status" aria-live="polite">
+          Private mode is on, Toby. Nothing is stored unless you download a file.
+        </p>
+      </section>
+
+      <section class="tips" aria-label="Helpful voice commands">
+        <h2>Friendly phrases to try</h2>
+        <ul>
+          <li>"Search cozy cafes nearby"</li>
+          <li>"Look up how to plant tomatoes"</li>
+          <li>"Hey Snoopy, find calm music for focus"</li>
+        </ul>
+      </section>
+    </main>
+
+    <script src="app.js" defer></script>
+  </body>
+</html>

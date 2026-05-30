@@ -1,0 +1,9 @@
+{
+  "name": "snoopy",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A warm voice-activated web browsing agent for Toby.",
+  "scripts": {
+    "test": "node --check app.js && node scripts/check-agent-policy.js"
+  }
+}
