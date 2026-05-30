@@ -28,6 +28,24 @@ Then visit `http://localhost:8000`.
 Microphone access and speech recognition support depend on the browser. Chrome
 and Edge provide the broadest Web Speech API support.
 
+## Use without local hosting
+
+This repo includes a GitHub Pages workflow at `.github/workflows/pages.yml`.
+After the changes are merged to `main`, the repo owner can make the voice agent
+available from GitHub without running anything locally:
+
+1. Open the repository on GitHub.
+2. Go to **Settings** -> **Pages**.
+3. Set **Source** to **GitHub Actions**.
+4. Run the **Deploy voice agent to GitHub Pages** workflow, or push to `main`.
+
+The workflow deploys only `index.html`, `app.js`, and `styles.css`.
+
+Privacy note: a normal GitHub Pages site can be reachable by anyone with the
+site URL, even when the source repository is private. If the agent must be
+restricted to only you, use a private hosting option with sign-in protection
+instead of a public Pages URL.
+
 ## How to use
 
 1. Select a search engine if you want something other than DuckDuckGo.
