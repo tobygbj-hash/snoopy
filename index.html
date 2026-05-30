@@ -3,6 +3,15 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests"
+    />
+    <meta
+      http-equiv="Permissions-Policy"
+      content="camera=(), geolocation=(), payment=(), usb=(), microphone=(self)"
+    />
+    <meta name="referrer" content="no-referrer" />
     <title>Snoopy Voice Browser</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
@@ -57,6 +66,37 @@
             Open search results
           </a>
         </div>
+      </section>
+
+      <section class="handoff-card" aria-labelledby="handoff-title">
+        <div>
+          <p class="eyebrow">Private continuity</p>
+          <h2 id="handoff-title">Transfer notes for a future agent</h2>
+          <p>
+            Snoopy does not save your voice transcript, settings, or searches in
+            browser storage. If a future agent needs context, Toby can download a
+            private handoff file on demand.
+          </p>
+        </div>
+
+        <div class="privacy-grid">
+          <label class="checkbox-field">
+            <input id="includeTranscript" type="checkbox" />
+            <span>Include the last heard phrase in the handoff file</span>
+          </label>
+          <div class="button-row">
+            <button id="downloadHandoffButton" type="button" class="secondary">
+              Download private handoff
+            </button>
+            <button id="clearDataButton" type="button" class="secondary">
+              Clear screen data
+            </button>
+          </div>
+        </div>
+
+        <p id="privacyStatus" class="privacy-status" role="status" aria-live="polite">
+          Private mode is on, Toby. Nothing is stored unless you download a file.
+        </p>
       </section>
 
       <section class="tips" aria-label="Helpful voice commands">

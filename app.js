@@ -4,10 +4,14 @@ const SpeechRecognition =
   window.SpeechRecognition || window.webkitSpeechRecognition || null;
 
 const elements = {
+  clearDataButton: document.querySelector("#clearDataButton"),
+  downloadHandoffButton: document.querySelector("#downloadHandoffButton"),
   fallbackLink: document.querySelector("#fallbackLink"),
   fallbackPanel: document.querySelector("#fallbackPanel"),
   fallbackText: document.querySelector("#fallbackText"),
+  includeTranscript: document.querySelector("#includeTranscript"),
   indicator: document.querySelector("#listeningIndicator"),
+  privacyStatus: document.querySelector("#privacyStatus"),
   searchEngine: document.querySelector("#searchEngine"),
   startButton: document.querySelector("#startButton"),
   statusText: document.querySelector("#statusText"),
@@ -22,6 +26,8 @@ const speechLines = {
   blocked: "Toby, your browser wants one extra click to open the results.",
   empty: "Toby, I did not catch a search phrase yet. Please try again.",
   stopped: "All set, Toby. I have stopped listening.",
+  handoffReady: "Toby, your private handoff file is ready.",
+  cleared: "Toby, I cleared the screen details.",
   unsupported:
     "Toby, this browser does not support voice recognition here. You can still type a search in your browser.",
   error: "Toby, I had trouble hearing that. Please try again when you are ready.",
@@ -36,6 +42,7 @@ const engineUrls = {
 let recognition = null;
 let isListening = false;
 let shouldRestart = false;
+let lastHeardPhrase = "";
 
 function setStatus(messageKey) {
   elements.statusText.textContent = speechLines[messageKey];
@@ -90,13 +97,20 @@ function openSearch(query) {
     "Toby, if the new tab did not open, this button will take you to the search results.";
   elements.fallbackPanel.hidden = Boolean(openedWindow);
 
-  setStatus("searching");
-  speak("searching");
+  if (openedWindow) {
+    setStatus("searching");
+    speak("searching");
+    return;
+  }
+
+  setStatus("blocked");
+  speak("blocked");
 }
 
 function handleTranscript(rawTranscript) {
   const query = cleanTranscript(rawTranscript);
 
+  lastHeardPhrase = rawTranscript || "";
   elements.transcriptText.textContent = rawTranscript || "No words were detected.";
 
   if (!query) {
@@ -106,6 +120,77 @@ function handleTranscript(rawTranscript) {
   }
 
   openSearch(query);
+}
+
+
+function buildPrivateHandoff() {
+  const includeTranscript = elements.includeTranscript.checked;
+
+  return {
+    agentName: "Snoopy",
+    ownerName: "Toby",
+    createdAt: new Date().toISOString(),
+    purpose: "Private continuity file for moving this voice browsing agent context to a future agent.",
+    currentSettings: {
+      searchEngine: elements.searchEngine.value,
+      voiceLanguage: recognition ? recognition.lang : "en-US",
+    },
+    operatingRules: [
+      "Refer to the user as Toby.",
+      "Stay happy, warm, polite, and family friendly.",
+      "Do not say swear words.",
+      "Only speak from approved assistant response templates.",
+      "Open internet searches for spoken requests without reading raw queries aloud.",
+    ],
+    privacyModel: {
+      storesInBrowserStorage: false,
+      sendsTelemetry: false,
+      usesAnalytics: false,
+      microphoneUse: "Only after Toby presses Start voice agent and grants browser permission.",
+      transcriptIncluded: includeTranscript,
+      transcriptNote: includeTranscript
+        ? "Toby explicitly chose to include the last heard phrase."
+        : "Transcript omitted by default for privacy.",
+    },
+    lastHeardPhrase: includeTranscript ? lastHeardPhrase : null,
+  };
+}
+
+function downloadPrivateHandoff() {
+  const payload = buildPrivateHandoff();
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {
+    type: "application/json",
+  });
+  const handoffUrl = URL.createObjectURL(blob);
+  const downloadLink = document.createElement("a");
+
+  downloadLink.href = handoffUrl;
+  downloadLink.download = `snoopy-private-handoff-${new Date()
+    .toISOString()
+    .slice(0, 10)}.json`;
+  downloadLink.rel = "noopener noreferrer";
+  document.body.append(downloadLink);
+  downloadLink.click();
+  downloadLink.remove();
+
+  window.setTimeout(() => URL.revokeObjectURL(handoffUrl), 0);
+  elements.privacyStatus.textContent =
+    "Toby, your private handoff file was created on this device only.";
+  setStatus("handoffReady");
+  speak("handoffReady");
+}
+
+function clearScreenData() {
+  lastHeardPhrase = "";
+  elements.includeTranscript.checked = false;
+  elements.transcriptText.textContent =
+    'Nothing saved, Toby. Try saying "search sunrise photos".';
+  elements.fallbackPanel.hidden = true;
+  elements.fallbackLink.removeAttribute("href");
+  elements.privacyStatus.textContent =
+    "Private mode is on, Toby. The visible transcript and fallback link were cleared.";
+  setStatus("cleared");
+  speak("cleared");
 }
 
 function handleRecognitionResult(event) {
@@ -184,6 +269,8 @@ function setupSpeechRecognition() {
   setStatus("ready");
 }
 
+elements.clearDataButton.addEventListener("click", clearScreenData);
+elements.downloadHandoffButton.addEventListener("click", downloadPrivateHandoff);
 elements.startButton.addEventListener("click", startListening);
 elements.stopButton.addEventListener("click", stopListening);
 

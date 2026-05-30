@@ -5,7 +5,9 @@ const path = require("path");
 const vm = require("vm");
 
 const appPath = path.join(__dirname, "..", "app.js");
+const indexPath = path.join(__dirname, "..", "index.html");
 const appSource = fs.readFileSync(appPath, "utf8");
+const indexSource = fs.readFileSync(indexPath, "utf8");
 
 const speechLines = loadSpeechLines(appSource);
 const lineEntries = Object.entries(speechLines);
@@ -32,7 +34,50 @@ for (const key of spokenKeys) {
   }
 }
 
-console.log("Agent speech policy checks passed.");
+const forbiddenLeakPatterns = [
+  ["localStorage", /\blocalStorage\b/],
+  ["sessionStorage", /\bsessionStorage\b/],
+  ["cookies", /document\.cookie/],
+  ["fetch", /\bfetch\s*\(/],
+  ["XMLHttpRequest", /\bXMLHttpRequest\b/],
+  ["sendBeacon", /\bsendBeacon\b/],
+];
+
+for (const [label, pattern] of forbiddenLeakPatterns) {
+  if (pattern.test(appSource)) {
+    fail(`Potential privacy leak found in app.js: ${label}.`);
+  }
+}
+
+if (!/Content-Security-Policy/.test(indexSource)) {
+  fail("index.html is missing a Content Security Policy.");
+}
+
+if (!/connect-src 'none'/.test(indexSource)) {
+  fail("Content Security Policy must block app network connections.");
+}
+
+if (!/<meta name="referrer" content="no-referrer" \/>/.test(indexSource)) {
+  fail("index.html is missing the no-referrer policy.");
+}
+
+if (!/rel="noopener noreferrer"/.test(indexSource)) {
+  fail("External links must use noopener noreferrer.");
+}
+
+if (/window\.open/.test(appSource) && !/window\.open\([^)]*noopener,noreferrer/.test(appSource)) {
+  fail("window.open calls must include noopener,noreferrer.");
+}
+
+if (/<script[^>]+src="https?:\/\//.test(indexSource)) {
+  fail("Remote scripts are not allowed.");
+}
+
+if (/<link[^>]+href="https?:\/\//.test(indexSource)) {
+  fail("Remote stylesheets are not allowed.");
+}
+
+console.log("Agent speech and privacy policy checks passed.");
 
 function loadSpeechLines(source) {
   const objectMatch = source.match(/const speechLines = (\{[\s\S]*?\n\});/);
