@@ -54,10 +54,11 @@ instead of a public Pages URL.
    - "search cheerful dog pictures"
    - "look up local weather"
    - "hey Snoopy, find beginner piano lessons"
-4. Snoopy opens a results tab and confirms with a warm message for Toby.
+4. Snoopy reserves a results tab, sends the spoken words to the selected search
+   engine, and confirms with a warm message for Toby.
 
-If the browser blocks popups, Snoopy shows a button you can click to open the
-results.
+If the browser still blocks the reserved tab, Snoopy shows a button you can
+click to open the results.
 
 ## Private handoff
 
