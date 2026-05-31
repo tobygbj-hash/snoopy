@@ -60,6 +60,26 @@ instead of a public Pages URL.
 Snoopy keeps a backup button available in case the browser does not switch to
 the results tab automatically.
 
+
+## Always-on Raspberry Pi assistant
+
+For a Google Home-style setup that can keep running without your computer, use
+the `pi-assistant` folder. This version runs on a Raspberry Pi with a microphone
+and speaker. It listens for "hey Snoopy", sends the exact spoken query words to
+Google, tries to read the AI Overview, and speaks the summary aloud.
+
+Quick path:
+
+1. Put this repo on the Raspberry Pi.
+2. Follow `pi-assistant/README.md` to install Vosk, Chromium, and the Python
+   dependencies.
+3. Run `~/snoopy-pi-venv/bin/python pi-assistant/snoopy_pi.py`.
+4. For always-on use, install `pi-assistant/systemd/snoopy-pi.service`.
+
+Notes: speech recognition runs locally on the Pi, but the query text is sent to
+Google because Google needs it to produce search results and an AI Overview. AI
+Overviews are best effort because Google may not show one for every search.
+
 ## Read Google AI summaries aloud
 
 The `extension` folder contains a Chrome extension for reading Google AI
