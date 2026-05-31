@@ -8,7 +8,7 @@ results in a new tab.
 
 - Voice activation through the browser Web Speech API.
 - Warm, happy responses that refer to the user as Toby.
-- Internet browsing by opening DuckDuckGo searches for spoken queries.
+- Internet browsing by opening Google searches for spoken queries.
 - Safe assistant speech: Snoopy only speaks from approved polite phrases and
   never reads raw search terms aloud.
 - Private handoff download for transferring operating notes to a future agent.
@@ -48,7 +48,7 @@ instead of a public Pages URL.
 
 ## How to use
 
-1. Select a search engine if you want something other than DuckDuckGo.
+1. Select a search engine if you want something other than Google.
 2. Click **Start voice agent** and allow microphone access.
 3. Say what you want to search for, such as:
    - "search cheerful dog pictures"
@@ -80,6 +80,6 @@ the visible transcript and fallback search link.
 - A no-referrer policy and `noopener noreferrer` links reduce browser referrer
   and opener leaks when search results open.
 - Search phrases are sent to the chosen search engine because that is necessary
-  to browse for the spoken words. DuckDuckGo is the default search engine.
+  to browse for the spoken words. Google is the default search engine.
 - Microphone access is controlled by the browser and only starts after Toby
   clicks **Start voice agent** and grants permission.
