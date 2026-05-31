@@ -65,8 +65,18 @@ if (!/rel="noopener noreferrer"/.test(indexSource)) {
   fail("External links must use noopener noreferrer.");
 }
 
-if (/window\.open/.test(appSource) && !/window\.open\([^)]*noopener,noreferrer/.test(appSource)) {
-  fail("window.open calls must include noopener,noreferrer.");
+if (
+  /window\.open\("", "snoopy-search-results"\)/.test(appSource) &&
+  !/reservedSearchWindow\.opener = null/.test(appSource)
+) {
+  fail("Reserved search windows must clear window.opener before navigation.");
+}
+
+if (
+  /window\.open\(searchUrl/.test(appSource) &&
+  !/window\.open\(searchUrl, "_blank", "noopener,noreferrer"\)/.test(appSource)
+) {
+  fail("Fallback search windows must include noopener,noreferrer.");
 }
 
 if (/<script[^>]+src="https?:\/\//.test(indexSource)) {

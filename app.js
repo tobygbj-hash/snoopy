@@ -43,6 +43,7 @@ let recognition = null;
 let isListening = false;
 let shouldRestart = false;
 let lastHeardPhrase = "";
+let reservedSearchWindow = null;
 
 function setStatus(messageKey) {
   elements.statusText.textContent = speechLines[messageKey];
@@ -88,9 +89,86 @@ function buildSearchUrl(query) {
   return url.toString();
 }
 
+function closeReservedSearchWindow() {
+  if (reservedSearchWindow && !reservedSearchWindow.closed) {
+    reservedSearchWindow.close();
+  }
+
+  reservedSearchWindow = null;
+}
+
+function reserveSearchWindow() {
+  if (reservedSearchWindow && !reservedSearchWindow.closed) {
+    return true;
+  }
+
+  reservedSearchWindow = window.open("", "snoopy-search-results");
+
+  if (!reservedSearchWindow) {
+    return false;
+  }
+
+  try {
+    reservedSearchWindow.opener = null;
+    reservedSearchWindow.document.open();
+    reservedSearchWindow.document.write(`<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
+    <title>Snoopy is listening</title>
+    <style>
+      body {
+        min-height: 100vh;
+        margin: 0;
+        display: grid;
+        place-items: center;
+        background: #fff8ec;
+        color: #2f2924;
+        font-family: system-ui, sans-serif;
+      }
+      main {
+        max-width: 38rem;
+        padding: 2rem;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Snoopy is listening, Toby.</h1>
+      <p>Your search results will appear here after you speak.</p>
+    </main>
+  </body>
+</html>`);
+    reservedSearchWindow.document.close();
+    window.focus();
+  } catch (error) {
+    reservedSearchWindow = null;
+    return false;
+  }
+
+  return true;
+}
+
 function openSearch(query) {
   const searchUrl = buildSearchUrl(query);
-  const openedWindow = window.open(searchUrl, "_blank", "noopener,noreferrer");
+  let openedWindow = null;
+
+  if (reservedSearchWindow && !reservedSearchWindow.closed) {
+    try {
+      reservedSearchWindow.location.replace(searchUrl);
+      openedWindow = reservedSearchWindow;
+      reservedSearchWindow = null;
+    } catch (error) {
+      openedWindow = null;
+    }
+  }
+
+  if (!openedWindow) {
+    openedWindow = window.open(searchUrl, "_blank", "noopener,noreferrer");
+  }
 
   elements.fallbackLink.href = searchUrl;
   elements.fallbackText.textContent =
@@ -219,6 +297,7 @@ function startListening() {
 
   shouldRestart = true;
   elements.fallbackPanel.hidden = true;
+  reserveSearchWindow();
   setStatus("listening");
   speak("listening");
 
@@ -227,6 +306,7 @@ function startListening() {
     setListeningState(true);
   } catch (error) {
     shouldRestart = false;
+    closeReservedSearchWindow();
     setListeningState(false);
     setStatus("error");
     speak("error");
@@ -240,6 +320,7 @@ function stopListening() {
     recognition.stop();
   }
 
+  closeReservedSearchWindow();
   setListeningState(false);
   setStatus("stopped");
   speak("stopped");
@@ -261,6 +342,7 @@ function setupSpeechRecognition() {
   recognition.addEventListener("end", handleRecognitionEnd);
   recognition.addEventListener("error", () => {
     shouldRestart = false;
+    closeReservedSearchWindow();
     setListeningState(false);
     setStatus("error");
     speak("error");
