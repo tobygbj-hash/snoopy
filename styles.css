@@ -126,6 +126,15 @@ h1 {
   background: #fff8ed;
 }
 
+.setup-list {
+  display: grid;
+  gap: 12px;
+  margin: 18px 0 24px;
+  padding-left: 1.4rem;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
 
 .status-row {
   display: flex;

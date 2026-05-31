@@ -6,10 +6,14 @@ const vm = require("vm");
 
 const appPath = path.join(__dirname, "..", "app.js");
 const indexPath = path.join(__dirname, "..", "index.html");
+const summaryBookmarkletPath = path.join(__dirname, "..", "summary-bookmarklet.html");
+const summaryBookmarkletScriptPath = path.join(__dirname, "..", "summary-bookmarklet.js");
 const extensionDir = path.join(__dirname, "..", "extension");
 const extensionManifestPath = path.join(extensionDir, "manifest.json");
 const appSource = fs.readFileSync(appPath, "utf8");
 const indexSource = fs.readFileSync(indexPath, "utf8");
+const summaryBookmarkletSource = fs.readFileSync(summaryBookmarkletScriptPath, "utf8");
+const summaryBookmarkletHtml = fs.readFileSync(summaryBookmarkletPath, "utf8");
 const extensionRuntimeSources = [
   "content-script.js",
   "content.css",
@@ -21,7 +25,7 @@ const extensionSources = [
   ...extensionRuntimeSources,
   fs.readFileSync(extensionManifestPath, "utf8"),
 ];
-const browserSource = [appSource, ...extensionSources].join("\n");
+const browserSource = [appSource, summaryBookmarkletSource, ...extensionSources].join("\n");
 const extensionManifest = JSON.parse(fs.readFileSync(extensionManifestPath, "utf8"));
 
 const speechLines = loadSpeechLines(appSource);
@@ -100,6 +104,26 @@ if (/<script[^>]+src="https?:\/\//.test(indexSource)) {
 
 if (/<link[^>]+href="https?:\/\//.test(indexSource)) {
   fail("Remote stylesheets are not allowed.");
+}
+
+if (!/Content-Security-Policy/.test(summaryBookmarkletHtml)) {
+  fail("summary-bookmarklet.html is missing a Content Security Policy.");
+}
+
+if (!/connect-src 'none'/.test(summaryBookmarkletHtml)) {
+  fail("summary-bookmarklet.html must block network connections.");
+}
+
+if (/<script[^>]+src="https?:\/\//.test(summaryBookmarkletHtml)) {
+  fail("Remote scripts are not allowed on the bookmarklet setup page.");
+}
+
+if (/<link[^>]+href="https?:\/\//.test(summaryBookmarkletHtml)) {
+  fail("Remote stylesheets are not allowed on the bookmarklet setup page.");
+}
+
+if (/\bfetch\s*\(|XMLHttpRequest|sendBeacon|localStorage|sessionStorage|document\.cookie/.test(summaryBookmarkletSource)) {
+  fail("Bookmarklet setup code must not use storage, cookies, or network calls.");
 }
 
 if (!Array.isArray(extensionManifest.host_permissions)) {
