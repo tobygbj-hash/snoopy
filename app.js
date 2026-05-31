@@ -89,6 +89,14 @@ function buildSearchUrl(query) {
   return url.toString();
 }
 
+function closeReservedSearchWindow() {
+  if (reservedSearchWindow && !reservedSearchWindow.closed) {
+    reservedSearchWindow.close();
+  }
+
+  reservedSearchWindow = null;
+}
+
 function reserveSearchWindow() {
   if (reservedSearchWindow && !reservedSearchWindow.closed) {
     return true;
@@ -298,6 +306,7 @@ function startListening() {
     setListeningState(true);
   } catch (error) {
     shouldRestart = false;
+    closeReservedSearchWindow();
     setListeningState(false);
     setStatus("error");
     speak("error");
@@ -311,11 +320,7 @@ function stopListening() {
     recognition.stop();
   }
 
-  if (reservedSearchWindow && !reservedSearchWindow.closed) {
-    reservedSearchWindow.close();
-  }
-
-  reservedSearchWindow = null;
+  closeReservedSearchWindow();
   setListeningState(false);
   setStatus("stopped");
   speak("stopped");
@@ -337,6 +342,7 @@ function setupSpeechRecognition() {
   recognition.addEventListener("end", handleRecognitionEnd);
   recognition.addEventListener("error", () => {
     shouldRestart = false;
+    closeReservedSearchWindow();
     setListeningState(false);
     setStatus("error");
     speak("error");
