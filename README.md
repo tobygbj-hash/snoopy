@@ -4,6 +4,9 @@ Snoopy is a cheerful, polite voice-activated browsing agent for Toby. It listens
 for spoken words in the browser, turns them into a web search, and opens the
 results in a new tab.
 
+**Documentation:** [docs/README.md](docs/README.md) (operations, architecture,
+commits, Raspberry Pi notes). **Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Features
 
 - Voice activation through the browser Web Speech API.
@@ -16,14 +19,15 @@ results in a new tab.
 
 ## Run locally
 
-Open `index.html` in a modern browser, or serve the folder with any static file
-server:
+Open `index.html` in a modern browser, or serve the folder:
 
 ```bash
-python3 -m http.server 8000
+npm run serve
 ```
 
 Then visit `http://localhost:8000`.
+
+Equivalent: `python3 -m http.server 8000`.
 
 Microphone access and speech recognition support depend on the browser. Chrome
 and Edge provide the broadest Web Speech API support.
@@ -115,3 +119,13 @@ the visible transcript and fallback search link.
   to browse for the spoken words. Google is the default search engine.
 - Microphone access is controlled by the browser and only starts after Toby
   clicks **Start voice agent** and grants permission.
+
+## For maintainers
+
+| Task | Command or doc |
+| ---- | ---------------- |
+| Run policy tests | `npm test` |
+| Local server | `npm run serve` |
+| Operations and deploy | [docs/OPERATIONS.md](docs/OPERATIONS.md) |
+| Commit message format | [docs/COMMITS.md](docs/COMMITS.md) or [COMMITS.md](COMMITS.md) |
+| AI agent rules | [AGENTS.md](AGENTS.md) |
