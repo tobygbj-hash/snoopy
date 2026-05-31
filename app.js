@@ -84,7 +84,7 @@ function cleanTranscript(transcript) {
 
 function buildSearchUrl(query) {
   const engine = elements.searchEngine.value;
-  const url = new URL(engineUrls[engine] || engineUrls.duckduckgo);
+  const url = new URL(engineUrls[engine] || engineUrls.google);
   url.searchParams.set("q", query);
   return url.toString();
 }
