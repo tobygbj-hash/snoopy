@@ -4,6 +4,6 @@
   "private": true,
   "description": "A warm voice-activated web browsing agent for Toby.",
   "scripts": {
-    "test": "node --check app.js && node --check extension/content-script.js && node --check extension/popup.js && node --check summary-bookmarklet.js && node scripts/check-agent-policy.js"
+    "test": "node --check app.js && node --check extension/content-script.js && node --check extension/popup.js && node --check summary-bookmarklet.js && python3 -m py_compile pi-assistant/snoopy_pi.py pi-assistant/tests/run_unit_tests.py && python3 pi-assistant/tests/run_unit_tests.py && node scripts/check-agent-policy.js"
   }
 }

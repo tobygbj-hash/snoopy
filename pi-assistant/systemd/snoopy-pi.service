@@ -1,0 +1,17 @@
+[Unit]
+Description=Snoopy Raspberry Pi voice assistant
+After=network-online.target sound.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/snoopy
+Environment=SNOOPY_VOSK_MODEL=/home/pi/snoopy-model
+Environment=SNOOPY_CHROMIUM_PATH=/usr/bin/chromium-browser
+ExecStart=/home/pi/snoopy-pi-venv/bin/python /home/pi/snoopy/pi-assistant/snoopy_pi.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
