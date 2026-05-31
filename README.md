@@ -57,8 +57,8 @@ instead of a public Pages URL.
 4. Snoopy reserves a results tab, sends the spoken words to the selected search
    engine, and confirms with a warm message for Toby.
 
-If the browser still blocks the reserved tab, Snoopy shows a button you can
-click to open the results.
+Snoopy keeps a backup button available in case the browser does not switch to
+the results tab automatically.
 
 ## Private handoff
 

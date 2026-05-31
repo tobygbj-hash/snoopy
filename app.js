@@ -172,17 +172,11 @@ function openSearch(query) {
 
   elements.fallbackLink.href = searchUrl;
   elements.fallbackText.textContent =
-    "Toby, if the new tab did not open, this button will take you to the search results.";
+    "Toby, your search was launched. If you need it, this backup button also opens the results.";
   elements.fallbackPanel.hidden = Boolean(openedWindow);
 
-  if (openedWindow) {
-    setStatus("searching");
-    speak("searching");
-    return;
-  }
-
-  setStatus("blocked");
-  speak("blocked");
+  setStatus("searching");
+  speak("searching");
 }
 
 function handleTranscript(rawTranscript) {
