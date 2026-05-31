@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests"
+    />
+    <meta name="referrer" content="no-referrer" />
+    <title>Snoopy AI Summary Bookmarklet</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell" aria-labelledby="page-title">
+      <section class="hero">
+        <p class="eyebrow">No extension needed</p>
+        <h1 id="page-title">Snoopy summary reader for Toby.</h1>
+        <p class="lede">
+          If Chrome blocks Developer Mode, use this bookmark button to read a
+          Google AI summary aloud from the current Google results page.
+        </p>
+      </section>
+
+      <section class="agent-card" aria-labelledby="bookmarklet-title">
+        <h2 id="bookmarklet-title">Install the bookmark button</h2>
+        <ol class="setup-list">
+          <li>Show Chrome's bookmarks bar with <strong>Ctrl+Shift+B</strong>.</li>
+          <li>Drag the orange button below onto the bookmarks bar.</li>
+          <li>Open a Google results page that has an AI summary.</li>
+          <li>Click the bookmark to hear Snoopy read the summary aloud.</li>
+        </ol>
+
+        <p>
+          <a id="bookmarkletLink" class="fallback-link" href="#">Read AI summary</a>
+        </p>
+
+        <p id="bookmarkletStatus" class="privacy-status" role="status" aria-live="polite">
+          Building the private bookmark button, Toby.
+        </p>
+      </section>
+
+      <section class="tips" aria-label="Bookmarklet privacy notes">
+        <h2>Privacy notes</h2>
+        <ul>
+          <li>The bookmark reads visible text from the current Google tab only.</li>
+          <li>It uses the browser's built-in speech synthesis.</li>
+          <li>It does not store data, call a backend, or send the summary anywhere.</li>
+          <li>If your account blocks bookmarklets too, the account manager controls that setting.</li>
+        </ul>
+      </section>
+    </main>
+
+    <script src="summary-bookmarklet.js" defer></script>
+  </body>
+</html>

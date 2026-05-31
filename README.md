@@ -76,6 +76,22 @@ To install it for free:
 Then open a Google results page with an AI summary and click **Read AI
 summary**. Snoopy reads the summary aloud for Toby in the same tab.
 
+
+## If Chrome blocks Developer Mode
+
+Some managed accounts do not allow unpacked extensions. In that case, use the
+no-extension bookmarklet instead:
+
+1. Open `summary-bookmarklet.html` from the Snoopy site.
+2. Show Chrome's bookmarks bar with **Ctrl+Shift+B**.
+3. Drag **Read AI summary** to the bookmarks bar.
+4. Open a Google results page with an AI summary.
+5. Click the bookmark to have Snoopy read the summary aloud in the same tab.
+
+The bookmarklet does not store data, use a backend, or open a new tab. If your
+managed account blocks bookmarklets too, only the account administrator can
+change that setting.
+
 ## Private handoff
 
 Use **Download private handoff** when you want to transfer Snoopy's operating

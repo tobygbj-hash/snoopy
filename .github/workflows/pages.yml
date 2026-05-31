@@ -36,7 +36,7 @@ jobs:
       - name: Prepare static site
         run: |
           mkdir -p dist
-          cp index.html app.js styles.css dist/
+          cp index.html app.js styles.css summary-bookmarklet.html summary-bookmarklet.js dist/
           touch dist/.nojekyll
 
       - name: Configure Pages
