@@ -6,8 +6,23 @@ const vm = require("vm");
 
 const appPath = path.join(__dirname, "..", "app.js");
 const indexPath = path.join(__dirname, "..", "index.html");
+const extensionDir = path.join(__dirname, "..", "extension");
+const extensionManifestPath = path.join(extensionDir, "manifest.json");
 const appSource = fs.readFileSync(appPath, "utf8");
 const indexSource = fs.readFileSync(indexPath, "utf8");
+const extensionRuntimeSources = [
+  "content-script.js",
+  "content.css",
+  "popup.js",
+  "popup.css",
+  "popup.html",
+].map((fileName) => fs.readFileSync(path.join(extensionDir, fileName), "utf8"));
+const extensionSources = [
+  ...extensionRuntimeSources,
+  fs.readFileSync(extensionManifestPath, "utf8"),
+];
+const browserSource = [appSource, ...extensionSources].join("\n");
+const extensionManifest = JSON.parse(fs.readFileSync(extensionManifestPath, "utf8"));
 
 const speechLines = loadSpeechLines(appSource);
 const lineEntries = Object.entries(speechLines);
@@ -44,8 +59,8 @@ const forbiddenLeakPatterns = [
 ];
 
 for (const [label, pattern] of forbiddenLeakPatterns) {
-  if (pattern.test(appSource)) {
-    fail(`Potential privacy leak found in app.js: ${label}.`);
+  if (pattern.test(browserSource)) {
+    fail(`Potential privacy leak found in browser code: ${label}.`);
   }
 }
 
@@ -85,6 +100,29 @@ if (/<script[^>]+src="https?:\/\//.test(indexSource)) {
 
 if (/<link[^>]+href="https?:\/\//.test(indexSource)) {
   fail("Remote stylesheets are not allowed.");
+}
+
+if (!Array.isArray(extensionManifest.host_permissions)) {
+  fail("Extension must declare host_permissions explicitly.");
+}
+
+if (
+  extensionManifest.host_permissions.length !== 1 ||
+  extensionManifest.host_permissions[0] !== "https://www.google.com/*"
+) {
+  fail("Extension host permissions must stay limited to Google pages.");
+}
+
+if (extensionManifest.permissions?.includes("storage")) {
+  fail("Extension must not request storage permission.");
+}
+
+if (extensionManifest.background) {
+  fail("Extension must not run a background worker.");
+}
+
+if (/https?:\/\//.test(extensionRuntimeSources.join("\n"))) {
+  fail("Extension runtime files must not load remote assets or make remote calls.");
 }
 
 console.log("Agent speech and privacy policy checks passed.");

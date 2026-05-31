@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Snoopy Summary Reader</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow">For Toby</p>
+      <h1>Read Google AI summary</h1>
+      <p>
+        Open a Google results page that has an AI summary, then ask Snoopy to
+        read it aloud from this same tab.
+      </p>
+      <button id="readSummaryButton" type="button">Read summary aloud</button>
+      <p id="statusText" class="status" role="status" aria-live="polite">
+        Ready when you are, Toby.
+      </p>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>

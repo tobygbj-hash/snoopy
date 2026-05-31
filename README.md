@@ -60,6 +60,22 @@ instead of a public Pages URL.
 Snoopy keeps a backup button available in case the browser does not switch to
 the results tab automatically.
 
+## Read Google AI summaries aloud
+
+The `extension` folder contains a Chrome extension for reading Google AI
+summaries aloud from the current Google results tab. It does not open a new tab.
+
+To install it for free:
+
+1. Download this repository from GitHub, or clone it.
+2. Open Chrome and go to `chrome://extensions`.
+3. Turn on **Developer mode**.
+4. Click **Load unpacked**.
+5. Select the `extension` folder.
+
+Then open a Google results page with an AI summary and click **Read AI
+summary**. Snoopy reads the summary aloud for Toby in the same tab.
+
 ## Private handoff
 
 Use **Download private handoff** when you want to transfer Snoopy's operating
