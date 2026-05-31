@@ -28,7 +28,7 @@ flowchart LR
 | Raspberry Pi 4 or 5 (2 GB+ RAM) | Pi 3 works but feels slower |
 | MicroSD card (32 GB+) | Raspberry Pi OS (64-bit) |
 | USB microphone | Or a USB webcam with mic |
-| Powered speaker | 3.5 mm, USB, or Bluetooth |
+| Powered speaker | 3.5 mm, USB, or **Bluetooth** (see below) |
 | Power supply | Official Pi supply recommended |
 | Optional: small HDMI display | Only for first-time setup; kiosk can run without a monitor later |
 | Wi‑Fi | Pi must reach the internet for Google |
@@ -40,6 +40,33 @@ flowchart LR
 3. You load the **Snoopy extension** once in that Chromium profile.
 4. Toby says a wake phrase → Snoopy opens Google → extension reads the AI summary aloud.
 5. Your laptop is not involved after setup.
+
+---
+
+## USB microphone + Bluetooth speaker (yes, this works)
+
+You do **not** need the Pi’s built-in audio jack or a monitor speaker. A common setup:
+
+| Device | How it connects |
+| ------ | ----------------- |
+| Microphone | USB mic (recommended) — plug into the Pi |
+| Speaker | Bluetooth speaker — pair with the Pi, set as default output |
+
+### Pair the Bluetooth speaker on Raspberry Pi OS
+
+1. Desktop menu → **Preferences** → **Bluetooth Manager** (or `bluetoothctl` in terminal).
+2. Put the speaker in pairing mode → connect on the Pi.
+3. Set it as default output: **Preferences** → **Audio Output** → choose the Bluetooth device.
+4. Test: `speaker-test -t wav -c 2` (you should hear sound on the BT speaker).
+
+Chromium uses the system default audio device, so Snoopy’s voice and the summary reader should play through the Bluetooth speaker once it is default.
+
+### Tips
+
+- **USB mic + BT speaker** is fine; they are independent.
+- If sound stutters, move the Pi closer to the speaker or use a USB Bluetooth dongle with a strong antenna.
+- After reboot, some speakers reconnect automatically; if not, reconnect in Bluetooth Manager or add a small reconnect script later.
+- The Pi still runs the browser and Snoopy — only the **audio output** (and USB **input**) are external.
 
 ---
 
