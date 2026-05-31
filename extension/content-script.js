@@ -60,21 +60,30 @@
   }
 
   function readSummaryAloud() {
-    const summary = findGoogleAiSummary();
+    const response = extractSummary();
 
-    if (!summary) {
+    if (!response.ok) {
       showStatus(speechLines.noSummary);
       speak(speechLines.noSummary);
       return { ok: false, message: speechLines.noSummary };
     }
 
-    const safeSummary = prepareSpeechText(summary);
-    const spokenText = `${speechLines.intro} ${safeSummary}`;
+    const spokenText = `${speechLines.intro} ${response.summary}`;
 
     showStatus(speechLines.reading);
     speak(spokenText);
 
     return { ok: true, message: speechLines.reading };
+  }
+
+  function extractSummary() {
+    const summary = findGoogleAiSummary();
+
+    if (!summary) {
+      return { ok: false, summary: "" };
+    }
+
+    return { ok: true, summary: prepareSpeechText(summary) };
   }
 
   function findGoogleAiSummary() {
@@ -212,6 +221,16 @@
   }
 
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message?.type === "SNOOPY_PING") {
+      sendResponse({ ok: true });
+      return false;
+    }
+
+    if (message?.type === "SNOOPY_EXTRACT_GOOGLE_AI_SUMMARY") {
+      sendResponse(extractSummary());
+      return false;
+    }
+
     if (message?.type !== "SNOOPY_READ_GOOGLE_AI_SUMMARY") {
       return false;
     }

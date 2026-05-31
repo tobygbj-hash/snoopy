@@ -5,7 +5,10 @@
   "description": "Reads Google AI summaries aloud for Toby without opening a new tab.",
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Read Google AI summary"
+    "default_title": "Ask Snoopy"
+  },
+  "background": {
+    "service_worker": "background.js"
   },
   "content_scripts": [
     {
@@ -16,5 +19,5 @@
     }
   ],
   "host_permissions": ["https://www.google.com/*"],
-  "permissions": ["activeTab", "scripting"]
+  "permissions": ["activeTab", "scripting", "tabs", "tts"]
 }

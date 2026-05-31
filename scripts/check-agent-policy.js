@@ -15,6 +15,7 @@ const indexSource = fs.readFileSync(indexPath, "utf8");
 const summaryBookmarkletSource = fs.readFileSync(summaryBookmarkletScriptPath, "utf8");
 const summaryBookmarkletHtml = fs.readFileSync(summaryBookmarkletPath, "utf8");
 const extensionRuntimeSources = [
+  "background.js",
   "content-script.js",
   "content.css",
   "popup.js",
@@ -141,13 +142,24 @@ if (extensionManifest.permissions?.includes("storage")) {
   fail("Extension must not request storage permission.");
 }
 
-if (extensionManifest.background) {
-  fail("Extension must not run a background worker.");
+if (extensionManifest.background?.service_worker !== "background.js") {
+  fail("Extension background worker must stay limited to background.js.");
 }
 
-if (/https?:\/\//.test(extensionRuntimeSources.join("\n"))) {
-  fail("Extension runtime files must not load remote assets or make remote calls.");
+const allowedExtensionPermissions = new Set(["activeTab", "scripting", "tabs", "tts"]);
+for (const permission of extensionManifest.permissions || []) {
+  if (!allowedExtensionPermissions.has(permission)) {
+    fail(`Extension permission is not allowed: ${permission}.`);
+  }
 }
+
+const runtimeUrls = Array.from(extensionRuntimeSources.join("\n").matchAll(/https?:\/\/[^"'\s)]+/g), (match) => match[0]);
+for (const url of runtimeUrls) {
+  if (!url.startsWith("https://www.google.com")) {
+    fail(`Extension runtime URL must stay limited to Google: ${url}.`);
+  }
+}
+
 
 console.log("Agent speech and privacy policy checks passed.");
 
