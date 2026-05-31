@@ -39,7 +39,7 @@ available from GitHub without running anything locally:
 3. Set **Source** to **GitHub Actions**.
 4. Run the **Deploy voice agent to GitHub Pages** workflow, or push to `main`.
 
-The workflow deploys only `index.html`, `app.js`, and `styles.css`.
+The workflow deploys `index.html`, `app.js`, `styles.css`, and the summary bookmarklet setup page.
 
 Privacy note: a normal GitHub Pages site can be reachable by anyone with the
 site URL, even when the source repository is private. If the agent must be
@@ -63,7 +63,13 @@ the results tab automatically.
 ## Read Google AI summaries aloud
 
 The `extension` folder contains a Chrome extension for reading Google AI
-summaries aloud from the current Google results tab. It does not open a new tab.
+summaries aloud. It has two modes:
+
+- **Ask Snoopy**: say or type the exact words to search. Snoopy opens Google in
+  an inactive background tab, reads the AI Overview aloud, and closes that tab
+  without switching you to it.
+- **Read current page**: open a Google results page yourself and ask Snoopy to
+  read the visible AI summary.
 
 To install it for free:
 
@@ -73,14 +79,17 @@ To install it for free:
 4. Click **Load unpacked**.
 5. Select the `extension` folder.
 
-Then open a Google results page with an AI summary and click **Read AI
-summary**. Snoopy reads the summary aloud for Toby in the same tab.
+Then click the Snoopy extension icon. Use **Speak search words** or type the
+exact Google query and click **Search Google and read AI Overview**. If you are
+already on a Google results page, **Read summary aloud** still reads that page.
 
 
 ## If Chrome blocks Developer Mode
 
-Some managed accounts do not allow unpacked extensions. In that case, use the
-no-extension bookmarklet instead:
+Some managed accounts do not allow unpacked extensions. The full background-tab
+Google Home style flow requires the extension, so it needs either Developer Mode,
+a Chrome Web Store install, or permission from the account administrator. If none
+of those are available, use the no-extension bookmarklet instead:
 
 1. Open `summary-bookmarklet.html` from the Snoopy site.
 2. Show Chrome's bookmarks bar with **Ctrl+Shift+B**.
@@ -88,7 +97,9 @@ no-extension bookmarklet instead:
 4. Open a Google results page with an AI summary.
 5. Click the bookmark to have Snoopy read the summary aloud in the same tab.
 
-The bookmarklet does not store data, use a backend, or open a new tab. If your
+The bookmarklet does not store data or use a backend, but it runs on the current
+Google results page. It cannot search in a hidden tab because normal webpages
+and bookmarklets are not allowed to read Google pages in the background. If your
 managed account blocks bookmarklets too, only the account administrator can
 change that setting.
 

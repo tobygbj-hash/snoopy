@@ -9,10 +9,26 @@
   <body>
     <main>
       <p class="eyebrow">For Toby</p>
-      <h1>Read Google AI summary</h1>
+      <h1>Ask Snoopy</h1>
       <p>
-        Open a Google results page that has an AI summary, then ask Snoopy to
-        read it aloud from this same tab.
+        Say or type the exact words to search. Snoopy checks Google in the
+        background, closes the results tab, and reads the AI Overview aloud.
+      </p>
+      <label class="field">
+        <span>Exact Google search words</span>
+        <textarea
+          id="queryInput"
+          rows="3"
+          placeholder="Ask about space, recipes, weather, or anything else"
+        ></textarea>
+      </label>
+      <button id="voiceSearchButton" type="button">Speak search words</button>
+      <button id="searchAndReadButton" type="button" class="secondary">
+        Search Google and read AI Overview
+      </button>
+      <hr />
+      <p class="small">
+        Already on a Google results page? This still works too.
       </p>
       <button id="readSummaryButton" type="button">Read summary aloud</button>
       <p id="statusText" class="status" role="status" aria-live="polite">

@@ -6,7 +6,7 @@
 }
 
 body {
-  width: 320px;
+  width: 360px;
   margin: 0;
   color: #2f2924;
   background: #fff8ec;
@@ -35,6 +35,26 @@ p {
   line-height: 1.45;
 }
 
+.field {
+  display: grid;
+  gap: 7px;
+  margin: 14px 0;
+  color: #6f6257;
+  font-weight: 800;
+}
+
+textarea {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  border: 1px solid rgba(47, 41, 36, 0.18);
+  border-radius: 14px;
+  padding: 10px 12px;
+  color: #2f2924;
+  background: #ffffff;
+  font: inherit;
+}
+
 button {
   width: 100%;
   border: 0;
@@ -47,6 +67,10 @@ button {
   cursor: pointer;
 }
 
+button + button {
+  margin-top: 10px;
+}
+
 button:hover,
 button:focus-visible {
   background: #c86516;
@@ -55,6 +79,27 @@ button:focus-visible {
 button:focus-visible {
   outline: 4px solid rgba(242, 140, 56, 0.32);
   outline-offset: 3px;
+}
+
+button.secondary {
+  color: #2f2924;
+  background: #ffe7c7;
+}
+
+button.secondary:hover,
+button.secondary:focus-visible {
+  background: #ffd195;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid rgba(47, 41, 36, 0.12);
+  margin: 16px 0;
+}
+
+.small {
+  margin: 0 0 10px;
+  font-size: 0.88rem;
 }
 
 .status {
