@@ -29,7 +29,18 @@ const browserSource = [appSource, summaryBookmarkletSource, ...extensionSources]
 const extensionManifest = JSON.parse(fs.readFileSync(extensionManifestPath, "utf8"));
 
 const speechLines = loadSpeechLines(appSource);
+const wakeWords = loadWakeWords(appSource);
 const lineEntries = Object.entries(speechLines);
+
+if (wakeWords.length < 2) {
+  fail("At least two wake phrases must be configured.");
+}
+
+for (const phrase of wakeWords) {
+  if (!/\bsnoopy\b/i.test(phrase)) {
+    fail(`Wake phrase "${phrase}" must include the word snoopy.`);
+  }
+}
 
 if (lineEntries.length === 0) {
   fail("No approved speech lines were found.");
@@ -159,6 +170,16 @@ function loadSpeechLines(source) {
   }
 
   return vm.runInNewContext(`(${objectMatch[1]})`, Object.create(null));
+}
+
+function loadWakeWords(source) {
+  const arrayMatch = source.match(/const wakeWords = (\[[\s\S]*?\n\]);/);
+
+  if (!arrayMatch) {
+    fail("Could not find the wake phrase list.");
+  }
+
+  return vm.runInNewContext(arrayMatch[1], Object.create(null));
 }
 
 function fail(message) {
