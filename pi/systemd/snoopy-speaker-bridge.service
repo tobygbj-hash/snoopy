@@ -1,0 +1,15 @@
+[Unit]
+Description=Snoopy local speaker identification bridge
+After=network-online.target sound.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/snoopy/pi/speaker-id
+ExecStart=/home/pi/snoopy/pi/speaker-id/.venv/bin/python bridge.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

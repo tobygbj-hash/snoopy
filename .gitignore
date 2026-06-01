@@ -1,2 +1,7 @@
 node_modules/
 .DS_Store
+pi/speaker-id/.venv/
+pi/speaker-id/profiles/*
+!pi/speaker-id/profiles/.gitkeep
+pi/speaker-id/**/*.wav
+pi/speaker-id/**/*.npy

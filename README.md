@@ -7,7 +7,8 @@ results in a new tab.
 ## Features
 
 - Voice activation through the browser Web Speech API.
-- Warm, happy responses that refer to the user as Toby.
+- Warm, happy responses that use each listener's name (Toby, Mum, etc.).
+- **Raspberry Pi:** local voice enrollment so Snoopy recognizes who is speaking — see [docs/SPEAKER-PROFILES.md](docs/SPEAKER-PROFILES.md).
 - Internet browsing by opening Google searches for spoken queries.
 - Safe assistant speech: Snoopy only speaks from approved polite phrases and
   never reads raw search terms aloud.
