@@ -1,0 +1,8 @@
+# <type>(<scope>): <short summary — imperative, ~72 chars>
+# |  Types: feat | fix | docs | chore | test | refactor
+# |  Scopes: app | extension | bookmarklet | ci | docs | policy
+#
+# <optional body: what changed and why>
+#
+# Run npm test before committing JS/HTML changes.
+# See docs/COMMITS.md for full conventions.
