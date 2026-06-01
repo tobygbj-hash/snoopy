@@ -1,0 +1,15 @@
+[Unit]
+Description=Snoopy local voice agent (static web server)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/snoopy
+ExecStart=/usr/bin/npm run serve
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

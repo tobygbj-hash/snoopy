@@ -17,6 +17,11 @@ commits, Raspberry Pi notes). **Contributing:** [CONTRIBUTING.md](CONTRIBUTING.m
 - Private handoff download for transferring operating notes to a future agent.
 - No server, analytics, telemetry, API key, or persistent browser storage required.
 
+## Raspberry Pi (laptop off, Pi in the room)
+
+To run Snoopy on a Pi with the Google AI summary reader — without keeping a
+laptop on — follow **[pi/README.md](pi/README.md)**.
+
 ## Run locally
 
 Open `index.html` in a modern browser, or serve the folder:
