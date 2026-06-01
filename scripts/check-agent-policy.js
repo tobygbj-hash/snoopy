@@ -47,11 +47,11 @@ if (lineEntries.length === 0) {
 }
 
 for (const [key, line] of lineEntries) {
-  if (!/\bToby\b/.test(line)) {
-    fail(`The "${key}" speech line does not refer to Toby.`);
+  if (!/\{name\}/.test(line)) {
+    fail(`The "${key}" speech line must include the {name} placeholder.`);
   }
 
-  if (!/^[\w\s.,'-]+$/.test(line)) {
+  if (!/^[\w\s.,'{}-]+$/.test(line)) {
     fail(`The "${key}" speech line contains unexpected punctuation.`);
   }
 }

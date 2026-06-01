@@ -4,6 +4,7 @@ const SpeechRecognition =
   window.SpeechRecognition || window.webkitSpeechRecognition || null;
 
 const elements = {
+  activeSpeaker: document.querySelector("#activeSpeaker"),
   clearDataButton: document.querySelector("#clearDataButton"),
   downloadHandoffButton: document.querySelector("#downloadHandoffButton"),
   fallbackLink: document.querySelector("#fallbackLink"),
@@ -11,6 +12,7 @@ const elements = {
   fallbackText: document.querySelector("#fallbackText"),
   includeTranscript: document.querySelector("#includeTranscript"),
   indicator: document.querySelector("#listeningIndicator"),
+  pageTitle: document.querySelector("#page-title"),
   privacyStatus: document.querySelector("#privacyStatus"),
   requireWakeWord: document.querySelector("#requireWakeWord"),
   searchEngine: document.querySelector("#searchEngine"),
@@ -21,22 +23,23 @@ const elements = {
 };
 
 const speechLines = {
-  ready: "Hi Toby, I am ready and happy to help.",
-  listening: "I am listening now, Toby.",
+  ready: "Hi {name}, I am ready and happy to help.",
+  listening: "I am listening now, {name}.",
   awaitingWake:
-    "Toby, say a wake phrase like hey Snoopy, then tell me what to search for.",
-  wakeAcknowledged: "Hi Toby, I heard you. What should I search for next.",
+    "{name}, say a wake phrase like hey Snoopy, then tell me what to search for.",
+  wakeAcknowledged: "Hi {name}, I heard you. What should I search for next.",
   noWakeWord:
-    "Toby, I did not hear a wake phrase yet. Try hey Snoopy or okay Snoopy.",
-  searching: "Wonderful, Toby. I am opening a friendly web search now.",
-  blocked: "Toby, your browser wants one extra click to open the results.",
-  empty: "Toby, I did not catch a search phrase yet. Please try again.",
-  stopped: "All set, Toby. I have stopped listening.",
-  handoffReady: "Toby, your private handoff file is ready.",
-  cleared: "Toby, I cleared the screen details.",
+    "{name}, I did not hear a wake phrase yet. Try hey Snoopy or okay Snoopy.",
+  searching: "Wonderful, {name}. I am opening a friendly web search now.",
+  blocked: "{name}, your browser wants one extra click to open the results.",
+  empty: "{name}, I did not catch a search phrase yet. Please try again.",
+  stopped: "All set, {name}. I have stopped listening.",
+  handoffReady: "{name}, your private handoff file is ready.",
+  cleared: "{name}, I cleared the screen details.",
   unsupported:
-    "Toby, this browser does not support voice recognition here. You can still type a search in your browser.",
-  error: "Toby, I had trouble hearing that. Please try again when you are ready.",
+    "{name}, this browser does not support voice recognition here. You can still type a search in your browser.",
+  error: "{name}, I had trouble hearing that. Please try again when you are ready.",
+  speakerReady: "Hi {name}, I recognized your voice and I am ready to help.",
 };
 
 // Longest phrases first so "wake up snoopy" wins over "hi snoopy".
@@ -63,17 +66,102 @@ let shouldRestart = false;
 let armedAfterWake = false;
 let lastHeardPhrase = "";
 let reservedSearchWindow = null;
+let activeProfileId = null;
+
+function getSpeakerCatalog() {
+  const catalog = window.SNOOPY_SPEAKER_CATALOG;
+
+  if (!catalog || !catalog.profiles) {
+    return {
+      defaultProfileId: "toby",
+      guestProfileId: "guest",
+      profiles: {
+        toby: { displayName: "Toby" },
+        guest: { displayName: "friend" },
+      },
+    };
+  }
+
+  return catalog;
+}
+
+function getProfile(profileId) {
+  const catalog = getSpeakerCatalog();
+  const profile = catalog.profiles[profileId];
+
+  if (!profile) {
+    return catalog.profiles[catalog.guestProfileId || "guest"];
+  }
+
+  return profile;
+}
+
+function getActiveProfileId() {
+  if (activeProfileId) {
+    return activeProfileId;
+  }
+
+  const catalog = getSpeakerCatalog();
+  const params = new URLSearchParams(window.location.search);
+  const fromUrl = params.get("listener");
+
+  if (fromUrl && catalog.profiles[fromUrl]) {
+    return fromUrl;
+  }
+
+  if (elements.activeSpeaker?.value && catalog.profiles[elements.activeSpeaker.value]) {
+    return elements.activeSpeaker.value;
+  }
+
+  return catalog.defaultProfileId || "toby";
+}
+
+function getActiveDisplayName() {
+  return getProfile(getActiveProfileId()).displayName;
+}
+
+function setActiveProfile(profileId, options = {}) {
+  const catalog = getSpeakerCatalog();
+  const resolvedId = catalog.profiles[profileId]
+    ? profileId
+    : catalog.guestProfileId || "guest";
+
+  activeProfileId = resolvedId;
+
+  if (elements.activeSpeaker) {
+    elements.activeSpeaker.value = resolvedId;
+  }
+
+  updatePersonalizedUi();
+
+  if (options.speakKey) {
+    setStatus(options.speakKey);
+    speak(options.speakKey);
+  }
+}
+
+function formatSpeechLine(template) {
+  return template.replace(/\{name\}/g, getActiveDisplayName());
+}
 
 function setStatus(messageKey) {
-  elements.statusText.textContent = speechLines[messageKey];
+  const template = speechLines[messageKey];
+
+  if (!template) {
+    return;
+  }
+
+  elements.statusText.textContent = formatSpeechLine(template);
 }
 
 function speak(messageKey) {
-  const text = speechLines[messageKey];
+  const template = speechLines[messageKey];
 
-  if (!("speechSynthesis" in window) || !text) {
+  if (!("speechSynthesis" in window) || !template) {
     return;
   }
+
+  const text = formatSpeechLine(template);
 
   window.speechSynthesis.cancel();
 
@@ -84,6 +172,56 @@ function speak(messageKey) {
   utterance.volume = 0.9;
 
   window.speechSynthesis.speak(utterance);
+}
+
+function updatePersonalizedUi() {
+  const name = getActiveDisplayName();
+
+  if (elements.pageTitle) {
+    elements.pageTitle.textContent = `Hi ${name}, I am Snoopy.`;
+  }
+
+  if (elements.privacyStatus && !elements.privacyStatus.dataset.locked) {
+    elements.privacyStatus.textContent = `Private mode is on, ${name}. Nothing is stored unless you download a file.`;
+  }
+}
+
+function isPiListenerMode() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("pi") === "1" || params.get("pi") === "true";
+}
+
+async function identifySpeakerOnPi() {
+  if (!window.SNOOPY_PI_LISTENER?.identifyActiveSpeaker) {
+    return null;
+  }
+
+  try {
+    return await window.SNOOPY_PI_LISTENER.identifyActiveSpeaker();
+  } catch (error) {
+    return null;
+  }
+}
+
+function populateSpeakerSelect() {
+  if (!elements.activeSpeaker) {
+    return;
+  }
+
+  const catalog = getSpeakerCatalog();
+  const existing = elements.activeSpeaker.value;
+  elements.activeSpeaker.textContent = "";
+
+  for (const [profileId, profile] of Object.entries(catalog.profiles)) {
+    const option = document.createElement("option");
+    option.value = profileId;
+    option.textContent = profile.displayName;
+    elements.activeSpeaker.append(option);
+  }
+
+  elements.activeSpeaker.value = catalog.profiles[existing]
+    ? existing
+    : getActiveProfileId();
 }
 
 function setListeningState(nextIsListening) {
@@ -180,6 +318,7 @@ function reserveSearchWindow() {
     return true;
   }
 
+  const listenerName = getActiveDisplayName();
   reservedSearchWindow = window.open("", "snoopy-search-results");
 
   if (!reservedSearchWindow) {
@@ -215,7 +354,7 @@ function reserveSearchWindow() {
   </head>
   <body>
     <main>
-      <h1>Snoopy is listening, Toby.</h1>
+      <h1>Snoopy is listening, ${listenerName}.</h1>
       <p>Your search results will appear here after you speak.</p>
     </main>
   </body>
@@ -232,6 +371,7 @@ function reserveSearchWindow() {
 
 function openSearch(query) {
   const searchUrl = buildSearchUrl(query);
+  const name = getActiveDisplayName();
   let openedWindow = null;
 
   if (reservedSearchWindow && !reservedSearchWindow.closed) {
@@ -249,8 +389,7 @@ function openSearch(query) {
   }
 
   elements.fallbackLink.href = searchUrl;
-  elements.fallbackText.textContent =
-    "Toby, your search was launched. If you need it, this backup button also opens the results.";
+  elements.fallbackText.textContent = `${name}, your search was launched. If you need it, this backup button also opens the results.`;
   elements.fallbackPanel.hidden = Boolean(openedWindow);
 
   setStatus("searching");
@@ -307,37 +446,44 @@ function handleTranscript(rawTranscript) {
   speak("noWakeWord");
 }
 
-
 function buildPrivateHandoff() {
   const includeTranscript = elements.includeTranscript.checked;
+  const catalog = getSpeakerCatalog();
+  const profileId = getActiveProfileId();
 
   return {
     agentName: "Snoopy",
-    ownerName: "Toby",
+    ownerName: getActiveDisplayName(),
+    activeProfileId: profileId,
     createdAt: new Date().toISOString(),
     purpose: "Private continuity file for moving this voice browsing agent context to a future agent.",
     currentSettings: {
       searchEngine: elements.searchEngine.value,
+      activeProfileId: profileId,
+      speakerProfiles: catalog.profiles,
       requireWakePhrase: requiresWakePhrase(),
       wakePhrases: [...wakeWords],
       voiceLanguage: recognition ? recognition.lang : "en-US",
+      piListenerMode: isPiListenerMode(),
     },
     operatingRules: [
-      "Refer to the user as Toby.",
+      "Refer to the active listener by their display name using {name} speech templates.",
       "Stay happy, warm, polite, and family friendly.",
       "Do not say swear words.",
       "Only speak from approved assistant response templates.",
       "Open internet searches for spoken requests without reading raw queries aloud.",
+      "On Raspberry Pi, identify the speaker locally before searching when voice enrollment is enabled.",
       "When wake phrase mode is on, accept any configured wake phrase before searching.",
     ],
     privacyModel: {
       storesInBrowserStorage: false,
       sendsTelemetry: false,
       usesAnalytics: false,
-      microphoneUse: "Only after Toby presses Start voice agent and grants browser permission.",
+      microphoneUse: "Only after Start voice agent is pressed and browser permission is granted.",
+      voicePrintsStoredOnPiOnly: true,
       transcriptIncluded: includeTranscript,
       transcriptNote: includeTranscript
-        ? "Toby explicitly chose to include the last heard phrase."
+        ? "The listener explicitly chose to include the last heard phrase."
         : "Transcript omitted by default for privacy.",
     },
     lastHeardPhrase: includeTranscript ? lastHeardPhrase : null,
@@ -362,8 +508,8 @@ function downloadPrivateHandoff() {
   downloadLink.remove();
 
   window.setTimeout(() => URL.revokeObjectURL(handoffUrl), 0);
-  elements.privacyStatus.textContent =
-    "Toby, your private handoff file was created on this device only.";
+  elements.privacyStatus.dataset.locked = "true";
+  elements.privacyStatus.textContent = `${getActiveDisplayName()}, your private handoff file was created on this device only.`;
   setStatus("handoffReady");
   speak("handoffReady");
 }
@@ -373,12 +519,11 @@ function clearScreenData() {
   armedAfterWake = false;
   setAwaitingWakeVisual(false);
   elements.includeTranscript.checked = false;
-  elements.transcriptText.textContent =
-    'Nothing saved, Toby. Try saying "search sunrise photos".';
+  elements.transcriptText.textContent = `Nothing saved, ${getActiveDisplayName()}. Try saying "search sunrise photos".`;
   elements.fallbackPanel.hidden = true;
   elements.fallbackLink.removeAttribute("href");
-  elements.privacyStatus.textContent =
-    "Private mode is on, Toby. The visible transcript and fallback link were cleared.";
+  elements.privacyStatus.dataset.locked = "true";
+  elements.privacyStatus.textContent = `Private mode is on, ${getActiveDisplayName()}. The visible transcript and fallback link were cleared.`;
   setStatus("cleared");
   speak("cleared");
 }
@@ -407,9 +552,23 @@ function handleRecognitionEnd() {
   }
 }
 
-function startListening() {
+async function startListening() {
   if (!recognition || isListening) {
     return;
+  }
+
+  elements.startButton.disabled = true;
+
+  if (isPiListenerMode()) {
+    elements.statusText.textContent = "Listening to who is speaking…";
+    const identified = await identifySpeakerOnPi();
+
+    if (identified?.profileId) {
+      setActiveProfile(identified.profileId, { speakKey: "speakerReady" });
+    } else {
+      const catalog = getSpeakerCatalog();
+      setActiveProfile(catalog.guestProfileId || "guest", { speakKey: "ready" });
+    }
   }
 
   shouldRestart = true;
@@ -480,10 +639,29 @@ function setupSpeechRecognition() {
   setStatus("ready");
 }
 
+async function initializeSpeakerProfiles() {
+  if (isPiListenerMode() && window.SNOOPY_PI_LISTENER?.loadCatalog) {
+    try {
+      await window.SNOOPY_PI_LISTENER.loadCatalog();
+    } catch (error) {
+      // Fall back to speakers.js defaults when the bridge is not running yet.
+    }
+  }
+
+  populateSpeakerSelect();
+  setActiveProfile(getActiveProfileId());
+  setStatus("ready");
+}
+
 elements.clearDataButton.addEventListener("click", clearScreenData);
 elements.downloadHandoffButton.addEventListener("click", downloadPrivateHandoff);
-elements.startButton.addEventListener("click", startListening);
+elements.startButton.addEventListener("click", () => {
+  startListening();
+});
 elements.stopButton.addEventListener("click", stopListening);
+elements.activeSpeaker?.addEventListener("change", () => {
+  setActiveProfile(elements.activeSpeaker.value, { speakKey: "ready" });
+});
 elements.requireWakeWord?.addEventListener("change", () => {
   if (!isListening) {
     return;
@@ -495,3 +673,4 @@ elements.requireWakeWord?.addEventListener("change", () => {
 });
 
 setupSpeechRecognition();
+initializeSpeakerProfiles();

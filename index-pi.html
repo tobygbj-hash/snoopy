@@ -5,24 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src http://127.0.0.1:8765; img-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests"
     />
     <meta
       http-equiv="Permissions-Policy"
       content="camera=(), geolocation=(), payment=(), usb=(), microphone=(self)"
     />
     <meta name="referrer" content="no-referrer" />
-    <title>Snoopy Voice Browser</title>
+    <title>Snoopy on Raspberry Pi</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <main class="app-shell" aria-labelledby="page-title">
       <section class="hero">
-        <p class="eyebrow">Warm voice search for your family</p>
+        <p class="eyebrow">Raspberry Pi voice search</p>
         <h1 id="page-title">Hi, I am Snoopy.</h1>
         <p class="lede">
-          Say a search phrase and I will happily browse the internet for it.
-          I keep my spoken replies kind, polite, and family friendly.
+          I listen on this Pi, recognize who is speaking, and use the right name
+          for each person. Voice prints never leave this device.
         </p>
       </section>
 
@@ -37,7 +37,7 @@
 
         <div class="controls">
           <label class="field">
-            <span>Who is speaking (manual test)</span>
+            <span>Active speaker (from voice or manual)</span>
             <select id="activeSpeaker"></select>
           </label>
 
@@ -48,11 +48,6 @@
               <option value="duckduckgo">DuckDuckGo</option>
               <option value="bing">Bing</option>
             </select>
-          </label>
-
-          <label class="checkbox-field">
-            <input id="requireWakeWord" type="checkbox" checked />
-            <span>Require a wake phrase before each search (recommended for Toby)</span>
           </label>
 
           <div class="button-row">
@@ -66,7 +61,8 @@
         <div class="transcript-panel">
           <p class="label">Last thing I heard</p>
           <p id="transcriptText" class="transcript">
-            Nothing yet. Try saying "search sunrise photos".
+            Nothing yet. Press Start — I will learn who is speaking, then listen
+            for a search.
           </p>
         </div>
 
@@ -83,9 +79,8 @@
           <p class="eyebrow">Private continuity</p>
           <h2 id="handoff-title">Transfer notes for a future agent</h2>
           <p>
-            Snoopy does not save your voice transcript, settings, or searches in
-            browser storage. If a future agent needs context, Toby can download a
-            private handoff file on demand.
+            Voice enrollment files live on this Pi only. Snoopy does not upload
+            voice prints or transcripts to the internet.
           </p>
         </div>
 
@@ -109,45 +104,25 @@
         </p>
       </section>
 
-      <section class="tips" aria-label="Wake phrases">
-        <h2>Wake phrases Toby can use</h2>
-        <p>
-          When wake phrase mode is on, start with one of these, then say what to
-          search for. You can say both in one breath or in two steps.
-        </p>
-        <ul>
-          <li>"Hey Snoopy, find calm music for focus"</li>
-          <li>"Hi Snoopy" … then "search cozy cafes nearby"</li>
-          <li>"Okay Snoopy, look up how to plant tomatoes"</li>
-          <li>"Wake up Snoopy, search sunrise photos"</li>
-          <li>"Hello Snoopy" or "Attention Snoopy" also work</li>
-        </ul>
-      </section>
-
-      <section class="tips" aria-label="Helpful voice commands">
-        <h2>Without a wake phrase</h2>
-        <p>Turn off wake phrase mode to search immediately, for example:</p>
-        <ul>
-          <li>"Search cozy cafes nearby"</li>
-          <li>"Look up how to plant tomatoes"</li>
-        </ul>
-      </section>
-
-      <section class="tips" aria-label="Google AI summary reader">
-        <h2>Need Snoopy to read a Google AI summary?</h2>
-        <p>
-          If Chrome extensions are blocked on your account, install the
-          no-extension bookmark button instead.
-        </p>
-        <p>
-          <a class="fallback-link" href="summary-bookmarklet.html">
-            Open summary reader setup
-          </a>
-        </p>
+      <section class="tips" aria-label="Speaker enrollment">
+        <h2>Enroll a new voice on the Pi</h2>
+        <pre>cd ~/snoopy/pi/speaker-id
+source .venv/bin/activate
+python enroll.py --id toby --name Toby
+python enroll.py --id mum --name Mum</pre>
+        <p>Restart the speaker bridge after enrolling: <code>sudo systemctl restart snoopy-speaker-bridge</code></p>
       </section>
     </main>
 
     <script src="speakers.js" defer></script>
+    <script src="pi-listener.js" defer></script>
     <script src="app.js" defer></script>
+    <script>
+      if (!/[?&]pi=/.test(window.location.search)) {
+        const url = new URL(window.location.href);
+        url.searchParams.set("pi", "1");
+        window.history.replaceState({}, "", url);
+      }
+    </script>
   </body>
 </html>
