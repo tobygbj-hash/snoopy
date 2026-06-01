@@ -50,6 +50,11 @@
             </select>
           </label>
 
+          <label class="checkbox-field">
+            <input id="requireWakeWord" type="checkbox" checked />
+            <span>Require a wake phrase before each search (recommended for Toby)</span>
+          </label>
+
           <div class="button-row">
             <button id="startButton" type="button">Start voice agent</button>
             <button id="stopButton" type="button" class="secondary" disabled>
@@ -104,12 +109,27 @@
         </p>
       </section>
 
+      <section class="tips" aria-label="Wake phrases">
+        <h2>Wake phrases Toby can use</h2>
+        <p>
+          When wake phrase mode is on, start with one of these, then say what to
+          search for. You can say both in one breath or in two steps.
+        </p>
+        <ul>
+          <li>"Hey Snoopy, find calm music for focus"</li>
+          <li>"Hi Snoopy" … then "search cozy cafes nearby"</li>
+          <li>"Okay Snoopy, look up how to plant tomatoes"</li>
+          <li>"Wake up Snoopy, search sunrise photos"</li>
+          <li>"Hello Snoopy" or "Attention Snoopy" also work</li>
+        </ul>
+      </section>
+
       <section class="tips" aria-label="Helpful voice commands">
-        <h2>Friendly phrases to try</h2>
+        <h2>Without a wake phrase</h2>
+        <p>Turn off wake phrase mode to search immediately, for example:</p>
         <ul>
           <li>"Search cozy cafes nearby"</li>
           <li>"Look up how to plant tomatoes"</li>
-          <li>"Hey Snoopy, find calm music for focus"</li>
         </ul>
       </section>
 

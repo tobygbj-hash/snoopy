@@ -4,6 +4,9 @@ Snoopy is a cheerful, polite voice-activated browsing agent for Toby. It listens
 for spoken words in the browser, turns them into a web search, and opens the
 results in a new tab.
 
+**Documentation:** [docs/README.md](docs/README.md) (operations, architecture,
+commits, Raspberry Pi notes). **Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Features
 
 - Voice activation through the browser Web Speech API.
@@ -15,16 +18,22 @@ results in a new tab.
 - Private handoff download for transferring operating notes to a future agent.
 - No server, analytics, telemetry, API key, or persistent browser storage required.
 
+## Raspberry Pi (laptop off, Pi in the room)
+
+To run Snoopy on a Pi with the Google AI summary reader — without keeping a
+laptop on — follow **[pi/README.md](pi/README.md)**.
+
 ## Run locally
 
-Open `index.html` in a modern browser, or serve the folder with any static file
-server:
+Open `index.html` in a modern browser, or serve the folder:
 
 ```bash
-python3 -m http.server 8000
+npm run serve
 ```
 
 Then visit `http://localhost:8000`.
+
+Equivalent: `python3 -m http.server 8000`.
 
 Microphone access and speech recognition support depend on the browser. Chrome
 and Edge provide the broadest Web Speech API support.
@@ -50,13 +59,20 @@ instead of a public Pages URL.
 ## How to use
 
 1. Select a search engine if you want something other than Google.
-2. Click **Start voice agent** and allow microphone access.
-3. Say what you want to search for, such as:
-   - "search cheerful dog pictures"
-   - "look up local weather"
+2. Leave **Require a wake phrase** on (recommended) or turn it off for immediate
+   search without a wake phrase.
+3. Click **Start voice agent** and allow microphone access.
+4. With wake phrase mode on, start with any eligible wake phrase, then say what
+   to search for (in one sentence or two steps):
    - "hey Snoopy, find beginner piano lessons"
-4. Snoopy reserves a results tab, sends the spoken words to the selected search
+   - "hi Snoopy" … then "search cheerful dog pictures"
+   - "okay Snoopy, look up local weather"
+   - "wake up Snoopy, search sunrise photos"
+   - "hello Snoopy" or "attention Snoopy" also work
+5. Snoopy reserves a results tab, sends the spoken words to the selected search
    engine, and confirms with a warm message for Toby.
+
+Eligible wake phrases are listed on the Snoopy page under **Wake phrases Toby can use**.
 
 Snoopy keeps a backup button available in case the browser does not switch to
 the results tab automatically.
@@ -116,3 +132,13 @@ the visible transcript and fallback search link.
   to browse for the spoken words. Google is the default search engine.
 - Microphone access is controlled by the browser and only starts after Toby
   clicks **Start voice agent** and grants permission.
+
+## For maintainers
+
+| Task | Command or doc |
+| ---- | ---------------- |
+| Run policy tests | `npm test` |
+| Local server | `npm run serve` |
+| Operations and deploy | [docs/OPERATIONS.md](docs/OPERATIONS.md) |
+| Commit message format | [docs/COMMITS.md](docs/COMMITS.md) or [COMMITS.md](COMMITS.md) |
+| AI agent rules | [AGENTS.md](AGENTS.md) |
