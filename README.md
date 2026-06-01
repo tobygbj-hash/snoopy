@@ -53,13 +53,20 @@ instead of a public Pages URL.
 ## How to use
 
 1. Select a search engine if you want something other than Google.
-2. Click **Start voice agent** and allow microphone access.
-3. Say what you want to search for, such as:
-   - "search cheerful dog pictures"
-   - "look up local weather"
+2. Leave **Require a wake phrase** on (recommended) or turn it off for immediate
+   search without a wake phrase.
+3. Click **Start voice agent** and allow microphone access.
+4. With wake phrase mode on, start with any eligible wake phrase, then say what
+   to search for (in one sentence or two steps):
    - "hey Snoopy, find beginner piano lessons"
-4. Snoopy reserves a results tab, sends the spoken words to the selected search
+   - "hi Snoopy" … then "search cheerful dog pictures"
+   - "okay Snoopy, look up local weather"
+   - "wake up Snoopy, search sunrise photos"
+   - "hello Snoopy" or "attention Snoopy" also work
+5. Snoopy reserves a results tab, sends the spoken words to the selected search
    engine, and confirms with a warm message for Toby.
+
+Eligible wake phrases are listed on the Snoopy page under **Wake phrases Toby can use**.
 
 Snoopy keeps a backup button available in case the browser does not switch to
 the results tab automatically.

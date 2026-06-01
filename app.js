@@ -12,6 +12,7 @@ const elements = {
   includeTranscript: document.querySelector("#includeTranscript"),
   indicator: document.querySelector("#listeningIndicator"),
   privacyStatus: document.querySelector("#privacyStatus"),
+  requireWakeWord: document.querySelector("#requireWakeWord"),
   searchEngine: document.querySelector("#searchEngine"),
   startButton: document.querySelector("#startButton"),
   statusText: document.querySelector("#statusText"),
@@ -22,6 +23,11 @@ const elements = {
 const speechLines = {
   ready: "Hi Toby, I am ready and happy to help.",
   listening: "I am listening now, Toby.",
+  awaitingWake:
+    "Toby, say a wake phrase like hey Snoopy, then tell me what to search for.",
+  wakeAcknowledged: "Hi Toby, I heard you. What should I search for next.",
+  noWakeWord:
+    "Toby, I did not hear a wake phrase yet. Try hey Snoopy or okay Snoopy.",
   searching: "Wonderful, Toby. I am opening a friendly web search now.",
   blocked: "Toby, your browser wants one extra click to open the results.",
   empty: "Toby, I did not catch a search phrase yet. Please try again.",
@@ -33,6 +39,18 @@ const speechLines = {
   error: "Toby, I had trouble hearing that. Please try again when you are ready.",
 };
 
+// Longest phrases first so "wake up snoopy" wins over "hi snoopy".
+const wakeWords = [
+  "wake up snoopy",
+  "attention snoopy",
+  "hello snoopy",
+  "hey snoopy",
+  "hi snoopy",
+  "okay snoopy",
+  "ok snoopy",
+  "yo snoopy",
+];
+
 const engineUrls = {
   bing: "https://www.bing.com/search",
   duckduckgo: "https://duckduckgo.com/",
@@ -42,6 +60,7 @@ const engineUrls = {
 let recognition = null;
 let isListening = false;
 let shouldRestart = false;
+let armedAfterWake = false;
 let lastHeardPhrase = "";
 let reservedSearchWindow = null;
 
@@ -74,12 +93,71 @@ function setListeningState(nextIsListening) {
   elements.indicator.classList.toggle("is-listening", nextIsListening);
 }
 
-function cleanTranscript(transcript) {
+function normalizeTranscript(transcript) {
   return transcript
     .trim()
-    .replace(/^hey\s+snoopy[\s,]*/i, "")
+    .toLowerCase()
+    .replace(/[.,!?;:]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function matchWakeWord(transcript) {
+  const normalized = normalizeTranscript(transcript);
+
+  for (const phrase of wakeWords) {
+    const pattern = new RegExp(`^${escapeRegExp(phrase)}(?:[\\s,.]|$)`, "i");
+
+    if (!pattern.test(normalized)) {
+      continue;
+    }
+
+    const remainder = normalized
+      .slice(phrase.length)
+      .replace(/^[\s,.]+/, "")
+      .trim();
+
+    return {
+      matched: true,
+      wakeWord: phrase,
+      remainder,
+    };
+  }
+
+  return {
+    matched: false,
+    wakeWord: null,
+    remainder: normalized,
+  };
+}
+
+function stripWakeWords(transcript) {
+  let working = transcript.trim();
+
+  for (const phrase of wakeWords) {
+    const pattern = new RegExp(`^${escapeRegExp(phrase)}[\\s,.]*`, "i");
+    working = working.replace(pattern, "");
+  }
+
+  return working.trim();
+}
+
+function cleanTranscript(transcript) {
+  return stripWakeWords(transcript)
     .replace(/^(please\s+)?(search|find|look up|browse for)\s+/i, "")
     .trim();
+}
+
+function requiresWakePhrase() {
+  return Boolean(elements.requireWakeWord?.checked);
+}
+
+function setAwaitingWakeVisual(isAwaiting) {
+  elements.indicator.classList.toggle("is-awaiting-wake", isAwaiting);
 }
 
 function buildSearchUrl(query) {
@@ -179,11 +257,8 @@ function openSearch(query) {
   speak("searching");
 }
 
-function handleTranscript(rawTranscript) {
+function processSearchQuery(rawTranscript) {
   const query = cleanTranscript(rawTranscript);
-
-  lastHeardPhrase = rawTranscript || "";
-  elements.transcriptText.textContent = rawTranscript || "No words were detected.";
 
   if (!query) {
     setStatus("empty");
@@ -192,6 +267,44 @@ function handleTranscript(rawTranscript) {
   }
 
   openSearch(query);
+}
+
+function handleTranscript(rawTranscript) {
+  lastHeardPhrase = rawTranscript || "";
+  elements.transcriptText.textContent = rawTranscript || "No words were detected.";
+
+  if (!requiresWakePhrase()) {
+    processSearchQuery(rawTranscript);
+    return;
+  }
+
+  const wakeMatch = matchWakeWord(rawTranscript);
+
+  if (wakeMatch.matched) {
+    armedAfterWake = false;
+    setAwaitingWakeVisual(false);
+
+    if (wakeMatch.remainder) {
+      processSearchQuery(wakeMatch.remainder);
+      return;
+    }
+
+    armedAfterWake = true;
+    setAwaitingWakeVisual(true);
+    setStatus("wakeAcknowledged");
+    speak("wakeAcknowledged");
+    return;
+  }
+
+  if (armedAfterWake) {
+    armedAfterWake = false;
+    setAwaitingWakeVisual(false);
+    processSearchQuery(rawTranscript);
+    return;
+  }
+
+  setStatus("noWakeWord");
+  speak("noWakeWord");
 }
 
 
@@ -205,6 +318,8 @@ function buildPrivateHandoff() {
     purpose: "Private continuity file for moving this voice browsing agent context to a future agent.",
     currentSettings: {
       searchEngine: elements.searchEngine.value,
+      requireWakePhrase: requiresWakePhrase(),
+      wakePhrases: [...wakeWords],
       voiceLanguage: recognition ? recognition.lang : "en-US",
     },
     operatingRules: [
@@ -213,6 +328,7 @@ function buildPrivateHandoff() {
       "Do not say swear words.",
       "Only speak from approved assistant response templates.",
       "Open internet searches for spoken requests without reading raw queries aloud.",
+      "When wake phrase mode is on, accept any configured wake phrase before searching.",
     ],
     privacyModel: {
       storesInBrowserStorage: false,
@@ -254,6 +370,8 @@ function downloadPrivateHandoff() {
 
 function clearScreenData() {
   lastHeardPhrase = "";
+  armedAfterWake = false;
+  setAwaitingWakeVisual(false);
   elements.includeTranscript.checked = false;
   elements.transcriptText.textContent =
     'Nothing saved, Toby. Try saying "search sunrise photos".';
@@ -281,6 +399,11 @@ function handleRecognitionEnd() {
   if (shouldRestart) {
     recognition.start();
     setListeningState(true);
+    elements.indicator.classList.toggle("is-listening", true);
+    elements.indicator.classList.toggle(
+      "is-awaiting-wake",
+      requiresWakePhrase() && !armedAfterWake,
+    );
   }
 }
 
@@ -290,10 +413,18 @@ function startListening() {
   }
 
   shouldRestart = true;
+  armedAfterWake = false;
   elements.fallbackPanel.hidden = true;
   reserveSearchWindow();
-  setStatus("listening");
-  speak("listening");
+  setAwaitingWakeVisual(requiresWakePhrase());
+
+  if (requiresWakePhrase()) {
+    setStatus("awaitingWake");
+    speak("awaitingWake");
+  } else {
+    setStatus("listening");
+    speak("listening");
+  }
 
   try {
     recognition.start();
@@ -309,6 +440,8 @@ function startListening() {
 
 function stopListening() {
   shouldRestart = false;
+  armedAfterWake = false;
+  setAwaitingWakeVisual(false);
 
   if (recognition && isListening) {
     recognition.stop();
@@ -336,6 +469,8 @@ function setupSpeechRecognition() {
   recognition.addEventListener("end", handleRecognitionEnd);
   recognition.addEventListener("error", () => {
     shouldRestart = false;
+    armedAfterWake = false;
+    setAwaitingWakeVisual(false);
     closeReservedSearchWindow();
     setListeningState(false);
     setStatus("error");
@@ -349,5 +484,14 @@ elements.clearDataButton.addEventListener("click", clearScreenData);
 elements.downloadHandoffButton.addEventListener("click", downloadPrivateHandoff);
 elements.startButton.addEventListener("click", startListening);
 elements.stopButton.addEventListener("click", stopListening);
+elements.requireWakeWord?.addEventListener("change", () => {
+  if (!isListening) {
+    return;
+  }
+
+  armedAfterWake = false;
+  setAwaitingWakeVisual(requiresWakePhrase() && !armedAfterWake);
+  setStatus(requiresWakePhrase() ? "awaitingWake" : "listening");
+});
 
 setupSpeechRecognition();
