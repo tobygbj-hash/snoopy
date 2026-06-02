@@ -23,6 +23,88 @@ const bookmarkletSource = `(() => {
     [115,104,105,116]
   ];
   const blockedSpeechWords = blockedWordCodes.map((codes) => String.fromCharCode(...codes));
+  const stopCommands = ["stop", "stop reading", "please stop", "snoopy stop"];
+  let stopRecognition = null;
+  let isReadingAloud = false;
+
+  function isStopCommand(transcript) {
+    const normalized = transcript.trim().toLowerCase().replace(/[.,!?;:]+$/g, "").replace(/\s+/g, " ");
+    return stopCommands.includes(normalized);
+  }
+
+  function stopStopListener() {
+    if (!stopRecognition) {
+      return;
+    }
+
+    const recognition = stopRecognition;
+    stopRecognition = null;
+    recognition.onend = null;
+
+    try {
+      recognition.stop();
+    } catch (error) {}
+  }
+
+  function cancelReading() {
+    window.speechSynthesis.cancel();
+    isReadingAloud = false;
+    stopStopListener();
+  }
+
+  function stopReadingAloud() {
+    cancelReading();
+  }
+
+  function startStopListener() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+
+    if (!SpeechRecognition) {
+      return;
+    }
+
+    stopStopListener();
+    stopRecognition = new SpeechRecognition();
+    stopRecognition.continuous = true;
+    stopRecognition.interimResults = false;
+    stopRecognition.lang = "en-US";
+
+    stopRecognition.onresult = (event) => {
+      const latestResult = event.results[event.results.length - 1];
+
+      if (!latestResult.isFinal || !isReadingAloud) {
+        return;
+      }
+
+      if (isStopCommand(latestResult[0].transcript)) {
+        stopReadingAloud();
+      }
+    };
+
+    stopRecognition.onend = () => {
+      if (!isReadingAloud || !stopRecognition) {
+        return;
+      }
+
+      try {
+        stopRecognition.start();
+      } catch (error) {
+        stopStopListener();
+      }
+    };
+
+    stopRecognition.onerror = () => {
+      if (isReadingAloud) {
+        stopStopListener();
+      }
+    };
+
+    try {
+      stopRecognition.start();
+    } catch (error) {
+      stopRecognition = null;
+    }
+  }
 
   function readSummary() {
     if (location.hostname !== "www.google.com" || location.pathname !== "/search") {
@@ -139,7 +221,7 @@ const bookmarkletSource = `(() => {
       return;
     }
 
-    window.speechSynthesis.cancel();
+    cancelReading();
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "en-US";
@@ -147,6 +229,18 @@ const bookmarkletSource = `(() => {
     utterance.rate = 0.96;
     utterance.volume = 0.9;
 
+    utterance.onend = () => {
+      isReadingAloud = false;
+      stopStopListener();
+    };
+
+    utterance.onerror = () => {
+      isReadingAloud = false;
+      stopStopListener();
+    };
+
+    isReadingAloud = true;
+    startStopListener();
     window.speechSynthesis.speak(utterance);
   }
 

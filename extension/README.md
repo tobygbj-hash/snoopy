@@ -17,6 +17,10 @@ current Google results tab. It does not open a new tab.
 2. Click the floating **Read AI summary** button, or click the Snoopy extension
    icon and then **Read summary aloud**.
 3. Snoopy reads a short version of the AI summary in the same tab.
+4. While Snoopy is reading, say **stop** (or **stop reading**) to stop immediately.
+
+Allow the microphone on `google.com` if Chrome asks — Snoopy only listens for the
+word stop while a summary is playing. Nothing is recorded or sent to a server.
 
 ## Privacy and safety
 

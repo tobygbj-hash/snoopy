@@ -91,7 +91,8 @@ To install it for free:
 5. Select the `extension` folder.
 
 Then open a Google results page with an AI summary and click **Read AI
-summary**. Snoopy reads the summary aloud for Toby in the same tab.
+summary**. Snoopy reads the summary aloud for Toby in the same tab. Say
+**stop** while it is reading to stop immediately.
 
 
 ## If Chrome blocks Developer Mode
