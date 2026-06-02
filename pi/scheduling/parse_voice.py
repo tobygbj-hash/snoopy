@@ -85,7 +85,17 @@ def parse_time_token(token: str) -> str | None:
     return f"{hour:02d}:{minute:02d}"
 
 
+def normalize_spoken_time(text: str) -> str:
+    """Turn spoken '5 30' into '5:30' before parsing."""
+    return re.sub(
+        r"\b(\d{1,2})\s+(\d{2})\b",
+        r"\1:\2",
+        text,
+    )
+
+
 def extract_time_and_rest(text: str) -> tuple[str | None, str]:
+    text = normalize_spoken_time(text)
     patterns = [
         r"\bat\s+(\d{1,2}(?::\d{2})?\s*(?:am|pm)?)\b",
         r"\b(\d{1,2}(?::\d{2})?\s*(?:am|pm)?)\b",

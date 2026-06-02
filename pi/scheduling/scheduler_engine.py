@@ -7,9 +7,11 @@ from datetime import date, datetime
 
 from calendar_sync import events_due_now, sync_all_calendars
 from pi_speak import speak_line
+from copy import deepcopy
+
 from storage import (
+    DEFAULT_PROFILE_BUCKET,
     get_display_name,
-    get_profile_bucket,
     list_profile_ids,
     load_data,
     prune_fired,
@@ -55,7 +57,8 @@ def _routine_runs_today(routine: dict, today: date) -> bool:
 
 def tick_profile(profile_id: str, data: dict, today: str, now: datetime) -> None:
     display_name = get_display_name(profile_id)
-    bucket = get_profile_bucket(profile_id)
+    profiles = data.setdefault("profiles", {})
+    bucket = profiles.setdefault(profile_id, deepcopy(DEFAULT_PROFILE_BUCKET))
 
     for reminder in bucket.get("reminders", []):
         item_id = reminder.get("id")

@@ -13,6 +13,7 @@ deploying, or extending Snoopy.
 | [COMMITS.md](COMMITS.md) | Commit message format and git workflow |
 | [RASPBERRY-PI.md](RASPBERRY-PI.md) | Ideas for a Google Home–style device on a Pi |
 | [SCHEDULING.md](SCHEDULING.md) | Pi reminders, routines, and calendar ICS sync |
+| [../pi/WHEN-YOU-GET-YOUR-PI.md](../pi/WHEN-YOU-GET-YOUR-PI.md) | Checklist for when the Pi arrives |
 
 ## Related files at the repo root
 
