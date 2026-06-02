@@ -14,22 +14,23 @@
   <body>
     <main class="app-shell" aria-labelledby="page-title">
       <section class="hero">
-        <p class="eyebrow">No extension needed</p>
+        <p class="eyebrow">No Chrome extension needed</p>
         <h1 id="page-title">Snoopy summary reader for Toby.</h1>
         <p class="lede">
-          If Chrome blocks Developer Mode, use this bookmark button to read a
-          Google AI summary aloud from the current Google results page.
+          Use this when your account blocks extensions. One bookmark button reads
+          Google AI summaries aloud — the same warm Snoopy voice, without
+          Developer Mode.
         </p>
       </section>
 
       <section class="agent-card" aria-labelledby="bookmarklet-title">
         <h2 id="bookmarklet-title">Install the bookmark button</h2>
         <ol class="setup-list">
-          <li>Show Chrome's bookmarks bar with <strong>Ctrl+Shift+B</strong>.</li>
+          <li>Show Chrome's bookmarks bar with <strong>Ctrl+Shift+B</strong> (or <strong>Cmd+Shift+B</strong> on Mac).</li>
           <li>Drag the orange button below onto the bookmarks bar.</li>
-          <li>Open a Google results page that has an AI summary.</li>
-          <li>Click the bookmark to hear Snoopy read the summary aloud.</li>
-          <li>While it is reading, say <strong>stop</strong> to stop immediately.</li>
+          <li>Search on Google until you see an <strong>AI Overview</strong> on the results page.</li>
+          <li>Click the bookmark <strong>Read AI summary</strong>.</li>
+          <li>Allow the microphone if Chrome asks (only used to hear “stop”).</li>
         </ol>
 
         <p>
@@ -41,13 +42,35 @@
         </p>
       </section>
 
+      <section class="tips" aria-label="Stop while reading">
+        <h2>Say stop while Snoopy is reading</h2>
+        <ul>
+          <li>"stop"</li>
+          <li>"hey Snoopy, stop"</li>
+          <li>"hi Snoopy" … then "stop"</li>
+        </ul>
+        <p>
+          Snoopy stops and says something kind, like "Of course, Toby. I have
+          stopped reading for you."
+        </p>
+      </section>
+
+      <section class="tips" aria-label="Voice search reminder">
+        <h2>Voice search does not need this bookmark</h2>
+        <p>
+          To search by voice, open the main Snoopy page
+          <a class="fallback-link" href="index.html">index.html</a>
+          — that also works without any extension.
+        </p>
+      </section>
+
       <section class="tips" aria-label="Bookmarklet privacy notes">
         <h2>Privacy notes</h2>
         <ul>
           <li>The bookmark reads visible text from the current Google tab only.</li>
           <li>It uses the browser's built-in speech synthesis.</li>
           <li>It does not store data, call a backend, or send the summary anywhere.</li>
-          <li>If your account blocks bookmarklets too, the account manager controls that setting.</li>
+          <li>If bookmarklets are blocked, only your account administrator can allow them.</li>
         </ul>
       </section>
     </main>

@@ -77,39 +77,31 @@ Eligible wake phrases are listed on the Snoopy page under **Wake phrases Toby ca
 Snoopy keeps a backup button available in case the browser does not switch to
 the results tab automatically.
 
-## Read Google AI summaries aloud
+## Read Google AI summaries aloud (no extension required)
 
-The `extension` folder contains a Chrome extension for reading Google AI
-summaries aloud from the current Google results tab. It does not open a new tab.
+If your school or work Chrome account **blocks extensions**, use the
+**bookmarklet** instead. You do not need Developer Mode.
 
-To install it for free:
+### Bookmarklet setup (recommended for Toby)
 
-1. Download this repository from GitHub, or clone it.
-2. Open Chrome and go to `chrome://extensions`.
-3. Turn on **Developer mode**.
-4. Click **Load unpacked**.
-5. Select the `extension` folder.
+1. Run Snoopy locally (`npm run serve`) or open your GitHub Pages URL.
+2. Open **`summary-bookmarklet.html`** (for example `http://localhost:8000/summary-bookmarklet.html`).
+3. Show the bookmarks bar: **Ctrl+Shift+B** (Windows) or **Cmd+Shift+B** (Mac).
+4. Drag the orange **Read AI summary** link onto the bookmarks bar.
+5. Open a Google results page that shows an **AI Overview**.
+6. Click the bookmark. Snoopy reads the summary aloud for Toby.
+7. While it is reading, say **stop** or **hey Snoopy, stop** to stop with a kind reply.
 
-Then open a Google results page with an AI summary and click **Read AI
-summary**. Snoopy reads the summary aloud for Toby in the same tab. Say **stop**
-or a wake phrase then **stop** (for example "hey Snoopy, stop") to stop with a
-kind reply.
+Allow the microphone on `google.com` if Chrome asks — Snoopy only listens for stop
+and wake phrases while the summary is playing.
 
+The bookmarklet does not use a backend, storage, or a new tab. If bookmarklets are
+blocked too, only your account administrator can change that policy.
 
-## If Chrome blocks Developer Mode
+### Optional: Chrome extension
 
-Some managed accounts do not allow unpacked extensions. In that case, use the
-no-extension bookmarklet instead:
-
-1. Open `summary-bookmarklet.html` from the Snoopy site.
-2. Show Chrome's bookmarks bar with **Ctrl+Shift+B**.
-3. Drag **Read AI summary** to the bookmarks bar.
-4. Open a Google results page with an AI summary.
-5. Click the bookmark to have Snoopy read the summary aloud in the same tab.
-
-The bookmarklet does not store data, use a backend, or open a new tab. If your
-managed account blocks bookmarklets too, only the account administrator can
-change that setting.
+If Developer Mode is allowed, you can use the `extension` folder instead of the
+bookmarklet. See `extension/README.md`.
 
 ## Private handoff
 
