@@ -25,6 +25,8 @@ sequenceDiagram
 1. **Enrollment** (once per person): record three clips → stored under `pi/speaker-id/profiles/`.
 2. **Start listening**: Pi records a short sample and picks the closest profile.
 3. **Speech lines**: approved templates use `{name}` → "Toby", "Mum", or "friend" if unknown.
+4. **Scheduling** (Pi only): reminders, routines, and calendars are stored **per profileId**
+   after voice ID — see [SCHEDULING.md](SCHEDULING.md).
 
 ## Laptop vs Pi
 
