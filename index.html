@@ -16,6 +16,14 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <div id="setupWarning" class="setup-warning" hidden role="alert">
+      <strong>This page must be opened through a web server.</strong>
+      In a terminal run <code>npm run serve</code> in the snoopy folder, then open
+      <a href="http://localhost:8000/">http://localhost:8000</a>
+      — or use
+      <a href="https://tobygbj-hash.github.io/snoopy/">GitHub Pages</a>.
+      Double-clicking the file will not work.
+    </div>
     <main class="app-shell" aria-labelledby="page-title">
       <section class="hero">
         <p class="eyebrow">Warm voice search for your family</p>
@@ -135,14 +143,14 @@
       </section>
 
       <section class="tips" aria-label="Google AI summary reader">
-        <h2>Read a Google AI summary (no extension)</h2>
+        <h2>Need Snoopy to read a Google AI summary?</h2>
         <p>
-          Managed Chrome accounts often block extensions. Toby can still hear
-          summaries with a bookmark button — no Developer Mode needed.
+          If Chrome extensions are blocked on your account, install the
+          no-extension bookmark button instead.
         </p>
         <p>
           <a class="fallback-link" href="summary-bookmarklet.html">
-            Set up the Read AI summary bookmark
+            Open summary reader setup
           </a>
         </p>
       </section>
@@ -150,5 +158,10 @@
 
     <script src="speakers.js" defer></script>
     <script src="app.js" defer></script>
+    <script>
+      if (location.protocol === "file:") {
+        document.querySelector("#setupWarning").hidden = false;
+      }
+    </script>
   </body>
 </html>

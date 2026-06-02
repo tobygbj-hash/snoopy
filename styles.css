@@ -119,6 +119,28 @@ h1 {
   accent-color: var(--primary);
 }
 
+.setup-warning {
+  max-width: 960px;
+  margin: 16px auto 0;
+  padding: 16px 20px;
+  border-radius: 16px;
+  border: 1px solid rgba(200, 101, 22, 0.35);
+  background: #fff1dc;
+  color: #5c3b1e;
+  line-height: 1.5;
+}
+
+.setup-warning code {
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.setup-warning a {
+  color: var(--primary-dark);
+  font-weight: 700;
+}
+
 .privacy-status {
   margin-bottom: 0;
   border-radius: 18px;

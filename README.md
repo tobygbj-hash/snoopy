@@ -25,7 +25,22 @@ laptop on — follow **[pi/README.md](pi/README.md)**.
 
 ## Run locally
 
-Open `index.html` in a modern browser, or serve the folder:
+**Important:** Do not double-click `index.html`. Run a local server, then open the link:
+
+```bash
+npm run serve
+```
+
+Open **http://localhost:8000** in Chrome.
+
+Or use the hosted copy: **https://tobygbj-hash.github.io/snoopy/**
+
+If the page does not load, see **[docs/START.md](docs/START.md)**.
+
+<details>
+<summary>Other ways to serve the folder</summary>
+
+Open `index.html` in a modern browser only after starting a server, or serve the folder:
 
 ```bash
 npm run serve
@@ -37,6 +52,8 @@ Equivalent: `python3 -m http.server 8000`.
 
 Microphone access and speech recognition support depend on the browser. Chrome
 and Edge provide the broadest Web Speech API support.
+
+</details>
 
 ## Use without local hosting
 
