@@ -12,12 +12,24 @@
     noSummary:
       "Toby, I could not find a Google AI summary on this page yet. Please open a Google results page with an AI summary and try again.",
     reading: "Reading the Google AI summary for Toby.",
-    stopped: "Stopped reading the summary for Toby.",
+    stopped: "Of course, Toby. I have stopped reading for you.",
+    stopReady: "Sure, Toby. Say stop whenever you want me to pause.",
     unsupported:
       "Toby, this browser cannot read the summary aloud from this page.",
   };
 
-  const stopCommands = ["stop", "stop reading", "please stop", "snoopy stop"];
+  const wakeWords = [
+    "wake up snoopy",
+    "attention snoopy",
+    "hello snoopy",
+    "hey snoopy",
+    "hi snoopy",
+    "okay snoopy",
+    "ok snoopy",
+    "yo snoopy",
+  ];
+
+  const stopCommands = ["stop", "stop reading", "please stop", "snoopy stop", "stop listening"];
 
   const blockedWordCodes = [
     [97, 115, 115, 104, 111, 108, 101],
@@ -39,6 +51,7 @@
   let statusElement = null;
   let stopRecognition = null;
   let isReadingAloud = false;
+  let armedForStop = false;
 
   function installButton() {
     if (!isSupportedGoogleResultsPage()) {
@@ -77,7 +90,7 @@
     const spokenText = `${speechLines.intro} ${safeSummary}`;
 
     showStatus(speechLines.reading);
-    speak(spokenText);
+    speak(spokenText, { listenForStop: true });
 
     return { ok: true, message: speechLines.reading };
   }
@@ -174,14 +187,48 @@
     }, text);
   }
 
-  function isStopCommand(transcript) {
-    const normalized = transcript
+  function normalizeCommand(transcript) {
+    return transcript
       .trim()
       .toLowerCase()
       .replace(/[.,!?;:]+$/g, "")
       .replace(/\s+/g, " ");
+  }
 
-    return stopCommands.includes(normalized);
+  function remainderAfterWakeWords(transcript) {
+    let remainder = normalizeCommand(transcript);
+
+    for (const phrase of wakeWords) {
+      if (remainder === phrase) {
+        return "";
+      }
+
+      const prefix = `${phrase} `;
+
+      if (remainder.startsWith(prefix)) {
+        remainder = remainder.slice(prefix.length).trim();
+      }
+    }
+
+    return remainder;
+  }
+
+  function isStopCommand(transcript) {
+    const normalized = normalizeCommand(transcript);
+    const afterWake = remainderAfterWakeWords(transcript);
+
+    return stopCommands.includes(normalized) || stopCommands.includes(afterWake);
+  }
+
+  function isWakePhraseOnly(transcript) {
+    return wakeWords.includes(normalizeCommand(transcript));
+  }
+
+  function handleStopWhileReading() {
+    armedForStop = false;
+    cancelReading();
+    showStatus(speechLines.stopped);
+    speak(speechLines.stopped, { listenForStop: false });
   }
 
   function stopStopListener() {
@@ -206,10 +253,6 @@
     stopStopListener();
   }
 
-  function stopReadingAloud() {
-    cancelReading();
-    showStatus(speechLines.stopped);
-  }
 
   function startStopListener() {
     const SpeechRecognition =
@@ -232,8 +275,16 @@
         return;
       }
 
-      if (isStopCommand(latestResult[0].transcript)) {
-        stopReadingAloud();
+      const transcript = latestResult[0].transcript;
+
+      if (isWakePhraseOnly(transcript)) {
+        armedForStop = true;
+        showStatus(speechLines.stopReady);
+        return;
+      }
+
+      if (isStopCommand(transcript)) {
+        handleStopWhileReading();
       }
     });
 
@@ -262,13 +313,22 @@
     }
   }
 
-  function speak(text) {
+  function speak(text, options = {}) {
+    const listenForStop = options.listenForStop === true;
+
     if (!("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)) {
       showStatus(speechLines.unsupported);
       return;
     }
 
-    cancelReading();
+    if (listenForStop) {
+      armedForStop = false;
+      cancelReading();
+    } else {
+      window.speechSynthesis.cancel();
+      isReadingAloud = false;
+      stopStopListener();
+    }
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "en-US";
@@ -277,17 +337,24 @@
     utterance.volume = 0.9;
 
     utterance.addEventListener("end", () => {
-      isReadingAloud = false;
-      stopStopListener();
+      if (listenForStop) {
+        isReadingAloud = false;
+        stopStopListener();
+      }
     });
 
     utterance.addEventListener("error", () => {
-      isReadingAloud = false;
-      stopStopListener();
+      if (listenForStop) {
+        isReadingAloud = false;
+        stopStopListener();
+      }
     });
 
-    isReadingAloud = true;
-    startStopListener();
+    if (listenForStop) {
+      isReadingAloud = true;
+      startStopListener();
+    }
+
     window.speechSynthesis.speak(utterance);
   }
 
