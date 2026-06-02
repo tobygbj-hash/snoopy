@@ -124,6 +124,31 @@ You should see `200`.
 
 ---
 
+## Phase 3b — Reminders, routines, and phone calendar (optional)
+
+Install the scheduling bridge so Snoopy can remind you at set times and sync a
+**private calendar link** from your phone (Google / iCloud ICS):
+
+```bash
+# See full steps:
+cat ~/snoopy/pi/scheduling/README.md
+```
+
+Quick start:
+
+```bash
+cd ~/snoopy/pi/scheduling
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+sudo cp ~/snoopy/pi/systemd/snoopy-scheduler.service /etc/systemd/system/
+sudo systemctl enable --now snoopy-scheduler
+```
+
+Use **http://localhost:8000/index-pi.html?pi=1** for voice reminders and routines.
+Details: [docs/SCHEDULING.md](../docs/SCHEDULING.md).
+
+---
+
 ## Phase 4 — Install the summary reader extension (on the Pi)
 
 On the Pi desktop (or over VNC):

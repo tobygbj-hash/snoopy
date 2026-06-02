@@ -1,0 +1,9 @@
+{
+  "calendar": {
+    "enabled": false,
+    "icsUrl": "",
+    "syncMinutes": 15,
+    "lookaheadDays": 14
+  },
+  "displayName": "Toby"
+}

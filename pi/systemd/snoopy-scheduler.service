@@ -1,0 +1,16 @@
+[Unit]
+Description=Snoopy reminders, routines, and calendar bridge (Pi only)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/snoopy/pi/scheduling
+Environment=SNOOPY_SCHEDULING_DIR=/home/pi/.config/snoopy
+ExecStart=/home/pi/snoopy/pi/scheduling/.venv/bin/python bridge.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src http://127.0.0.1:8765; img-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src http://127.0.0.1:8765 http://127.0.0.1:8766; img-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests"
     />
     <meta
       http-equiv="Permissions-Policy"
@@ -21,8 +21,9 @@
         <p class="eyebrow">Raspberry Pi voice search</p>
         <h1 id="page-title">Hi, I am Snoopy.</h1>
         <p class="lede">
-          I listen on this Pi, recognize who is speaking, and use the right name
-          for each person. Voice prints never leave this device.
+          I listen on this Pi, remind you about routines and calendar events, and
+          recognize who is speaking. Schedules stay on this device unless you add
+          a calendar link you choose.
         </p>
       </section>
 
@@ -50,10 +51,15 @@
             </select>
           </label>
 
+          <label class="checkbox-field">
+            <input id="requireWakeWord" type="checkbox" checked />
+            <span>Wake phrase required (hey Snoopy, hi Snoopy, etc.)</span>
+          </label>
+
           <div class="button-row">
-            <button id="startButton" type="button">Start voice agent</button>
+            <button id="startButton" type="button">Turn on wake word listening</button>
             <button id="stopButton" type="button" class="secondary" disabled>
-              Stop listening
+              Pause Snoopy
             </button>
           </div>
         </div>
@@ -61,8 +67,7 @@
         <div class="transcript-panel">
           <p class="label">Last thing I heard</p>
           <p id="transcriptText" class="transcript">
-            Nothing yet. Press Start — I will learn who is speaking, then listen
-            for a search.
+            Nothing yet. Say hey Snoopy and your search, or ask for a reminder.
           </p>
         </div>
 
@@ -71,6 +76,32 @@
           <a id="fallbackLink" class="fallback-link" target="_blank" rel="noopener noreferrer">
             Open search results
           </a>
+        </div>
+      </section>
+
+      <section class="agent-card" aria-label="Reminders and routines">
+        <div>
+          <p class="eyebrow">Schedules on this Pi</p>
+          <h2>Reminders, routines, and calendar</h2>
+          <p>
+            Say wake phrase plus a command, for example remind me at five thirty to
+            feed the dog, or list my routine. Calendar uses a private link you paste
+            below (Google or iCloud).
+          </p>
+        </div>
+        <pre id="scheduleList" class="transcript">Loading schedule…</pre>
+        <label class="field">
+          <span>Calendar ICS link (optional, stays on this Pi)</span>
+          <input id="calendarIcsUrl" type="url" autocomplete="off" spellcheck="false" />
+        </label>
+        <label class="checkbox-field">
+          <input id="calendarEnabled" type="checkbox" />
+          <span>Sync phone calendar through the private ICS link</span>
+        </label>
+        <div class="button-row">
+          <button id="saveCalendarButton" type="button" class="secondary">
+            Save calendar settings
+          </button>
         </div>
       </section>
 

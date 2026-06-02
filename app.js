@@ -20,6 +20,10 @@ const elements = {
   statusText: document.querySelector("#statusText"),
   stopButton: document.querySelector("#stopButton"),
   transcriptText: document.querySelector("#transcriptText"),
+  scheduleList: document.querySelector("#scheduleList"),
+  calendarIcsUrl: document.querySelector("#calendarIcsUrl"),
+  calendarEnabled: document.querySelector("#calendarEnabled"),
+  saveCalendarButton: document.querySelector("#saveCalendarButton"),
 };
 
 const speechLines = {
@@ -47,6 +51,19 @@ const speechLines = {
   heardWake: "Go ahead, {name}.",
   tapToEnable:
     "{name}, turn on wake word listening once, then only say hey Snoopy and your search.",
+  reminderSet: "{name}, I saved that reminder on this Pi.",
+  routineSet: "{name}, I added that to your routine on this Pi.",
+  reminderListEmpty: "{name}, you have no reminders saved on this Pi yet.",
+  reminderListReady: "{name}, your reminders are on the screen now.",
+  routineListEmpty: "{name}, you have no routine steps saved yet.",
+  routineListReady: "{name}, your routine is on the screen now.",
+  calendarListEmpty: "{name}, I do not see upcoming calendar events yet.",
+  calendarListReady: "{name}, upcoming calendar events are on the screen now.",
+  scheduleError: "{name}, I could not understand that reminder or routine time.",
+  reminderDue: "{name}, friendly reminder about {message}.",
+  routineDue: "{name}, it is time for {message}.",
+  calendarDue: "{name}, your calendar says {message}.",
+  calendarSaved: "{name}, I saved your calendar link on this Pi.",
 };
 
 // Longest phrases first so "wake up snoopy" wins over "hi snoopy".
@@ -172,7 +189,23 @@ function speak(messageKey) {
     return;
   }
 
-  const text = formatSpeechLine(template);
+  speakPlainText(formatSpeechLine(template));
+}
+
+function sanitizeScheduleMessage(rawMessage) {
+  const cleaned = String(rawMessage || "")
+    .replace(/[^\w\s.,'-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 120);
+
+  return cleaned || "your reminder";
+}
+
+function speakPlainText(text) {
+  if (!("speechSynthesis" in window) || !text) {
+    return;
+  }
 
   window.speechSynthesis.cancel();
 
@@ -183,6 +216,18 @@ function speak(messageKey) {
   utterance.volume = 0.9;
 
   window.speechSynthesis.speak(utterance);
+}
+
+function speakWithMessage(messageKey, rawMessage) {
+  const template = speechLines[messageKey];
+
+  if (!template) {
+    return;
+  }
+
+  const safeMessage = sanitizeScheduleMessage(rawMessage);
+  const text = formatSpeechLine(template).replace(/\{message\}/g, safeMessage);
+  speakPlainText(text);
 }
 
 function updatePersonalizedUi() {
@@ -460,9 +505,171 @@ function processSearchQuery(rawTranscript) {
   openSearch(query);
 }
 
-function handleTranscript(rawTranscript) {
+function formatScheduleEntry(item) {
+  const time = item.time || "?";
+  const message = item.message || item.summary || "item";
+  return `${time} — ${message}`;
+}
+
+function renderSchedulePanel(payload) {
+  if (!elements.scheduleList || !payload) {
+    return;
+  }
+
+  const lines = [];
+  const reminders = payload.reminders || [];
+  const routines = payload.routines || [];
+  const events = (payload.calendar && payload.calendar.events) || [];
+
+  if (reminders.length) {
+    lines.push("Reminders:");
+    for (const item of reminders) {
+      lines.push(`• ${formatScheduleEntry(item)}`);
+    }
+  }
+
+  if (routines.length) {
+    lines.push("Routine:");
+    for (const item of routines) {
+      lines.push(`• ${formatScheduleEntry(item)}`);
+    }
+  }
+
+  if (events.length) {
+    lines.push("Calendar:");
+    for (const item of events.slice(0, 8)) {
+      const when = item.start ? item.start.replace("T", " ") : "?";
+      lines.push(`• ${when} — ${item.summary || "event"}`);
+    }
+  }
+
+  elements.scheduleList.textContent = lines.length
+    ? lines.join("\n")
+    : "No reminders, routines, or calendar events yet.";
+}
+
+async function refreshSchedulePanel() {
+  if (!isPiListenerMode() || !window.SNOOPY_PI_SCHEDULER?.fetchSchedule) {
+    return;
+  }
+
+  try {
+    const payload = await window.SNOOPY_PI_SCHEDULER.fetchSchedule();
+    renderSchedulePanel(payload);
+
+    const calendar = payload.config?.calendar;
+
+    if (calendar && elements.calendarEnabled) {
+      elements.calendarEnabled.checked = Boolean(calendar.enabled);
+    }
+
+    if (calendar && elements.calendarIcsUrl) {
+      elements.calendarIcsUrl.value = calendar.icsUrl || "";
+    }
+  } catch (error) {
+    if (elements.scheduleList) {
+      elements.scheduleList.textContent =
+        "Scheduling bridge is offline. Run: sudo systemctl start snoopy-scheduler";
+    }
+  }
+}
+
+function applyScheduleVoiceResult(result) {
+  if (!result?.handled) {
+    return;
+  }
+
+  if (result.items) {
+    renderSchedulePanel({
+      reminders: result.speechKey?.includes("reminder") ? result.items : [],
+      routines: result.speechKey?.includes("routine") ? result.items : [],
+      calendar: result.speechKey?.includes("calendar")
+        ? { events: result.items }
+        : { events: [] },
+    });
+  } else {
+    refreshSchedulePanel();
+  }
+
+  if (result.speechKey === "reminderDue") {
+    speakWithMessage("reminderDue", result.message);
+    return;
+  }
+
+  if (result.speechKey === "routineDue") {
+    speakWithMessage("routineDue", result.message);
+    return;
+  }
+
+  if (result.speechKey === "calendarDue") {
+    speakWithMessage("calendarDue", result.message);
+    return;
+  }
+
+  if (result.speechKey) {
+    speak(result.speechKey);
+  }
+}
+
+async function tryHandleScheduleCommand(rawTranscript) {
+  if (!isPiListenerMode() || !window.SNOOPY_PI_SCHEDULER?.handleVoiceCommand) {
+    return false;
+  }
+
+  try {
+    const result = await window.SNOOPY_PI_SCHEDULER.handleVoiceCommand(rawTranscript);
+
+    if (!result?.handled) {
+      return false;
+    }
+
+    applyScheduleVoiceResult(result);
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+function handlePendingScheduleSpeech(item) {
+  const kind = item.kind || "reminder";
+  const message = item.message || "your reminder";
+
+  if (kind === "routine") {
+    speakWithMessage("routineDue", message);
+    return;
+  }
+
+  if (kind === "calendar") {
+    speakWithMessage("calendarDue", message);
+    return;
+  }
+
+  speakWithMessage("reminderDue", message);
+}
+
+function startSchedulePolling() {
+  if (!isPiListenerMode() || !window.SNOOPY_PI_SCHEDULER?.pollPendingSpeech) {
+    return;
+  }
+
+  const poll = () => {
+    window.SNOOPY_PI_SCHEDULER.pollPendingSpeech(handlePendingScheduleSpeech).catch(
+      () => {},
+    );
+  };
+
+  poll();
+  window.setInterval(poll, 45000);
+}
+
+async function handleTranscript(rawTranscript) {
   lastHeardPhrase = rawTranscript || "";
   elements.transcriptText.textContent = rawTranscript || "No words were detected.";
+
+  if (await tryHandleScheduleCommand(rawTranscript)) {
+    returnToPassiveListening();
+    return;
+  }
 
   if (isStopPhrase(rawTranscript)) {
     armedAfterWake = false;
@@ -569,6 +776,7 @@ function buildPrivateHandoff() {
       "Open internet searches for spoken requests without reading raw queries aloud.",
       "On Raspberry Pi, identify the speaker locally before searching when voice enrollment is enabled.",
       "When wake phrase mode is on, accept any configured wake phrase before searching.",
+      "On Raspberry Pi with the scheduling bridge, store reminders and routines locally; optional calendar uses an ICS URL the listener provides.",
     ],
     privacyModel: {
       storesInBrowserStorage: false,
@@ -631,7 +839,7 @@ function handleRecognitionResult(event) {
     return;
   }
 
-  handleTranscript(latestResult[0].transcript);
+  void handleTranscript(latestResult[0].transcript);
 }
 
 function handleRecognitionEnd() {
@@ -778,8 +986,25 @@ async function initializeSpeakerProfiles() {
   if (isPiListenerMode()) {
     window.setTimeout(() => {
       enableAlwaysListening();
+      refreshSchedulePanel();
+      startSchedulePolling();
     }, 0);
   }
+}
+
+if (elements.saveCalendarButton) {
+  elements.saveCalendarButton.addEventListener("click", async () => {
+    if (!window.SNOOPY_PI_SCHEDULER?.updateCalendarConfig) {
+      return;
+    }
+
+    await window.SNOOPY_PI_SCHEDULER.updateCalendarConfig({
+      enabled: Boolean(elements.calendarEnabled?.checked),
+      icsUrl: elements.calendarIcsUrl?.value?.trim() || "",
+    });
+    speak("calendarSaved");
+    refreshSchedulePanel();
+  });
 }
 
 elements.clearDataButton.addEventListener("click", clearScreenData);
