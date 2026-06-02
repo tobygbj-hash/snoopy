@@ -21,8 +21,9 @@
         <p class="eyebrow">Raspberry Pi voice search</p>
         <h1 id="page-title">Hi, I am Snoopy.</h1>
         <p class="lede">
-          I listen on this Pi, recognize who is speaking, and use the right name
-          for each person. Voice prints never leave this device.
+          I recognize who is speaking and use the right name. Reminders, routines,
+          and calendars run on this Pi in the background — see
+          <code>pi/scheduling/README.md</code>.
         </p>
       </section>
 
@@ -50,10 +51,15 @@
             </select>
           </label>
 
+          <label class="checkbox-field">
+            <input id="requireWakeWord" type="checkbox" checked />
+            <span>Wake phrase required (hey Snoopy, hi Snoopy, etc.)</span>
+          </label>
+
           <div class="button-row">
-            <button id="startButton" type="button">Start voice agent</button>
+            <button id="startButton" type="button">Turn on wake word listening</button>
             <button id="stopButton" type="button" class="secondary" disabled>
-              Stop listening
+              Pause Snoopy
             </button>
           </div>
         </div>
@@ -61,8 +67,7 @@
         <div class="transcript-panel">
           <p class="label">Last thing I heard</p>
           <p id="transcriptText" class="transcript">
-            Nothing yet. Press Start — I will learn who is speaking, then listen
-            for a search.
+            Nothing yet. Say hey Snoopy and your search, or ask for a reminder.
           </p>
         </div>
 
@@ -72,6 +77,19 @@
             Open search results
           </a>
         </div>
+      </section>
+
+      <section class="tips" aria-label="Pi scheduling">
+        <h2>Reminders and calendars (Pi only)</h2>
+        <p>
+          Scheduling does not use this browser. Install
+          <code>snoopy-scheduler</code>, enroll each voice, then use the CLI or
+          voice hook (speaker is identified first):
+        </p>
+        <pre>cd ~/snoopy/pi/scheduling && source .venv/bin/activate
+python cli.py voice "hey snoopy remind me at 5 30 to feed the dog"
+python cli.py calendar --profile toby --ics-url "https://…"
+python cli.py show --profile toby</pre>
       </section>
 
       <section class="handoff-card" aria-labelledby="handoff-title">

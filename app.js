@@ -569,6 +569,7 @@ function buildPrivateHandoff() {
       "Open internet searches for spoken requests without reading raw queries aloud.",
       "On Raspberry Pi, identify the speaker locally before searching when voice enrollment is enabled.",
       "When wake phrase mode is on, accept any configured wake phrase before searching.",
+      "On Raspberry Pi, reminders and routines are handled by the scheduling service (see pi/scheduling/), not the browser.",
     ],
     privacyModel: {
       storesInBrowserStorage: false,

@@ -12,6 +12,7 @@ deploying, or extending Snoopy.
 | [ARCHITECTURE.md](ARCHITECTURE.md) | How the web app, extension, and bookmarklet fit together |
 | [COMMITS.md](COMMITS.md) | Commit message format and git workflow |
 | [RASPBERRY-PI.md](RASPBERRY-PI.md) | Ideas for a Google Home–style device on a Pi |
+| [SCHEDULING.md](SCHEDULING.md) | Pi reminders, routines, and calendar ICS sync |
 
 ## Related files at the repo root
 
