@@ -2,5 +2,5 @@
 Type=Application
 Name=Snoopy Kiosk
 Comment=Voice agent and Google AI summary reader for Toby
-Exec=/usr/bin/chromium-browser --kiosk --noerrdialogs --disable-infobars --load-extension=/home/pi/snoopy/extension --unsafely-treat-insecure-origin-as-secure=http://localhost:8000 http://localhost:8000/
+Exec=/usr/bin/chromium-browser --kiosk --noerrdialogs --disable-infobars --use-fake-ui-for-media-stream --load-extension=/home/pi/snoopy/extension --unsafely-treat-insecure-origin-as-secure=http://localhost:8000 http://localhost:8000/index-pi.html?pi=1
 X-GNOME-Autostart-enabled=true
