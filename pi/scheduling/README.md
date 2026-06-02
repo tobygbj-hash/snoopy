@@ -1,12 +1,17 @@
 # Snoopy scheduling on the Raspberry Pi
 
-Local reminders, daily routines, and optional **phone calendar** sync — nothing
-leaves the Pi except fetching **your** private calendar link (ICS) if you turn
-that on.
+Reminders, daily routines, and **per-person calendars** — entirely on the Pi.
+**No browser required.** When it is time to speak, the scheduler uses
+**espeak-ng** through your speaker (Bluetooth or USB).
+
+Each enrolled voice (Toby, Mum, etc.) gets their **own** reminders, routines,
+and optional calendar link. When someone speaks, Snoopy identifies them first,
+then saves or lists **only their** schedule.
 
 ## Install
 
 ```bash
+sudo apt install -y espeak-ng alsa-utils
 cd ~/snoopy/pi/scheduling
 python3 -m venv .venv
 source .venv/bin/activate
@@ -15,16 +20,12 @@ mkdir -p ~/.config/snoopy
 cp config.example.json ~/.config/snoopy/config.json
 ```
 
-Edit `~/.config/snoopy/config.json` if you like. Calendar URL can also be saved
-from **index-pi.html** on the Pi.
-
-## Run at boot
+Enroll voices first (`pi/speaker-id/README.md`), then:
 
 ```bash
 sudo cp ~/snoopy/pi/systemd/snoopy-scheduler.service /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl enable snoopy-scheduler
-sudo systemctl start snoopy-scheduler
+sudo systemctl enable --now snoopy-scheduler
 ```
 
 Check:
@@ -33,49 +34,68 @@ Check:
 curl -s http://127.0.0.1:8766/v1/status
 ```
 
-Open **http://localhost:8000/index-pi.html?pi=1** (with `npm run serve` and the
-speaker bridge if you use voice profiles).
+## Voice command (identifies speaker from mic)
 
-## Voice examples
+```bash
+cd ~/snoopy/pi/scheduling && source .venv/bin/activate
+python cli.py voice "hey snoopy remind me at 5 30 to feed the dog"
+python cli.py voice "hey snoopy list my reminders"
+python cli.py voice "hey snoopy list my calendar"
+```
 
-| Say | What happens |
-| --- | --- |
-| Hey Snoopy, remind me at 5 30 to feed the dog | One-shot or daily reminder |
-| Hey Snoopy, every day at 7 brush teeth | Routine step |
-| Hey Snoopy, list my reminders | Shows on screen + short reply |
-| Hey Snoopy, list my routine | Routine list |
-| Hey Snoopy, list my calendar | Upcoming ICS events |
+Snoopy records ~2 seconds, matches the voice print, then attaches the command to
+that **profileId**.
 
-When a reminder or routine is due, Snoopy speaks on the Pi (Chromium must be
-open in kiosk mode).
+## CLI examples
 
-## Phone calendar (ICS)
+```bash
+# Reminder for Toby without re-identifying (profile known)
+python cli.py remind --profile toby --at 17:30 --message "homework"
 
-1. On your phone or laptop, open your calendar app settings.
-2. Find **secret address**, **subscribe URL**, or **ICS** for the calendar you
-   want (Google Calendar: Settings → your calendar → Integrate calendar →
-   **Secret address in iCal format**).
-3. On the Pi page, paste that link, check **Sync phone calendar**, and click
-   **Save calendar settings**.
+# Routine weekdays 7:15 for Mum
+python cli.py routine --profile mum --at 7:15 --message "leave for work" --weekdays
 
-The Pi fetches that URL on a timer. Your calendar provider sees a normal
-subscribe fetch — no Snoopy cloud.
+# Mum's Google Calendar secret ICS link
+python cli.py calendar --profile mum --ics-url "https://calendar.google.com/calendar/ical/…"
 
-**Managed school Google accounts** may block API or secret links; use local
-reminders/routines on the Pi, or a personal Google calendar.
+# Show one person
+python cli.py show --profile toby
 
-## Data files
+# Everyone
+python cli.py show
+python cli.py profiles
+```
 
-| File | Purpose |
-| ---- | ------- |
-| `~/.config/snoopy/scheduling.json` | Reminders and routines |
-| `~/.config/snoopy/config.json` | Calendar URL and options |
-| `~/.config/snoopy/calendar_cache.json` | Last synced events |
+## Per-person phone calendar
+
+1. On the phone, open calendar settings for **that person's** calendar.
+2. Copy the **secret ICS / iCal** link (Google: Integrate calendar → secret address).
+3. Run `python cli.py calendar --profile <id> --ics-url "…"` for that same profile id
+   you used in `enroll.py --id …`.
+
+Toby's calendar is never mixed with Mum's — separate files under
+`~/.config/snoopy/`.
+
+## HTTP API (optional automation)
+
+| Method | Path | Notes |
+| ------ | ---- | ----- |
+| POST | `/v1/voice-command` | Body: `{"transcript":"…"}` — identifies speaker |
+| GET | `/v1/schedule?profileId=toby` | One profile |
+| GET | `/v1/schedule` | All profiles |
+| POST | `/v1/calendar/config` | Body: `profileId`, `icsUrl`, `enabled` |
+
+## Data on the SD card
+
+| File | Contents |
+| ---- | -------- |
+| `scheduling.json` | Per-profile reminders and routines |
+| `config.json` | Per-profile calendar URLs |
+| `calendar_caches.json` | Cached ICS events per profile |
 
 ## Privacy
 
-- Reminders and routines are **only** on the SD card.
-- Calendar sync uses **your** ICS URL; disable it anytime in config.
-- No telemetry, no account system in Snoopy.
+- No Snoopy cloud; optional fetch only to **your** ICS URL per person.
+- Guest/unrecognized voice uses the `guest` profile unless enrollment improves.
 
-See also [docs/SCHEDULING.md](../../docs/SCHEDULING.md).
+See [docs/SCHEDULING.md](../../docs/SCHEDULING.md).

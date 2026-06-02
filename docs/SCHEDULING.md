@@ -1,74 +1,65 @@
-# Reminders, routines, and calendar on the Pi
+# Reminders, routines, and calendars (Raspberry Pi)
 
-Snoopy scheduling runs **only on the Raspberry Pi**. Laptops use voice search
-without this feature unless you run the scheduler bridge locally for testing.
+Scheduling is **Pi-only**. It does not run in the browser, does not use
+`localStorage`, and does not need Chromium open to speak.
 
-## Features
-
-| Feature | Storage | Spoken when due |
-| ------- | ------- | ---------------- |
-| **Reminders** | `~/.config/snoopy/scheduling.json` | Yes |
-| **Routines** (repeating times) | Same file | Yes |
-| **Calendar** (optional ICS) | Cached locally | Yes |
-
-## Architecture
+## How it works
 
 ```mermaid
 flowchart LR
   Mic[USB mic]
-  Browser[Chromium index-pi]
-  App[app.js]
-  Bridge[scheduling bridge :8766]
-  Store[(JSON on SD card)]
-  ICS[Phone calendar ICS URL]
+  Enroll[Speaker ID]
+  Sched[Scheduler service :8766]
+  Store[(JSON per profile)]
+  ICS[ICS URL per person]
+  Speak[espeak-ng → speaker]
 
-  Mic --> Browser
-  Browser --> App
-  App --> Bridge
-  Bridge --> Store
-  Bridge --> ICS
-  Bridge --> App
-  App --> Speaker[Speaker]
+  Mic --> Enroll
+  Enroll --> Sched
+  Sched --> Store
+  Sched --> ICS
+  Sched --> Speak
 ```
 
-The browser does **not** store schedules in `localStorage`. The Pi bridge owns
-all schedule data.
+1. **Voice enrollment** (`pi/speaker-id/`) creates profiles: `toby`, `mum`, etc.
+2. **Scheduling service** (`pi/scheduling/`) stores reminders/routines **per profile**.
+3. When you add something by voice, the Pi **identifies the speaker** and writes to
+   **that profile only**.
+4. At the set time, **espeak-ng** reads the reminder aloud (no browser).
 
-## Calendar and your phone
+## Per-person calendars
 
-There is no direct link to the Calendar app on your phone. You connect the **same
-cloud calendar** the phone already syncs with:
+| Person | Profile id | Calendar link |
+| ------ | ---------- | ------------- |
+| Toby | `toby` | Toby's secret ICS URL in config |
+| Mum | `mum` | Mum's secret ICS URL |
 
-- **Google Calendar** — secret iCal link
-- **Apple iCloud** — calendar subscription URL (CalDAV/ICS)
-- **Outlook** — publish or subscribe link if available
+Configure separately:
 
-Paste that URL on the Pi once. Edits on your phone appear after the next sync
-(default every 15 minutes, or when you ask to list calendar).
+```bash
+python cli.py calendar --profile toby --ics-url "https://…"
+python cli.py calendar --profile mum --ics-url "https://…"
+```
 
-## Laptop vs Pi
+Phone calendars sync to the cloud; the Pi reads each person's subscribe link.
+There is no direct hook into the Calendar app — only the link you paste.
 
-| | Laptop `index.html` | Pi `index-pi.html?pi=1` |
-| --- | --- | --- |
-| Reminders | Not available | Yes |
-| Routines | Not available | Yes |
-| Calendar ICS | Not available | Yes |
-| Voice setup | Wake + search | Wake + search + schedule commands |
+## Browser / Chromium
 
-## Operations
-
-Install and enable the service: [pi/scheduling/README.md](../pi/scheduling/README.md).
-
-Troubleshooting:
-
-| Problem | Fix |
-| ------- | --- |
-| Schedule panel says bridge offline | `sudo systemctl start snoopy-scheduler` |
-| No spoken reminder | Chromium kiosk must be open; check pending: `curl http://127.0.0.1:8766/v1/pending-speech` |
-| Calendar empty | Check ICS URL, enable sync, run `curl -X POST http://127.0.0.1:8766/v1/calendar/sync` |
-| Wrong time | Set Pi timezone: `sudo raspi-config` → Localisation |
+The web page (`index-pi.html`) is **not** used for scheduling. You can still use
+Chromium for Google search if you want, but reminders and calendar alerts work
+with **scheduler + speaker only**.
 
 ## Zane RC car
 
-Scheduling does not use GPIO. It can run on the same Pi as Zane if the Pi has
-enough RAM and Chromium is only open when you want voice + reminders in the room.
+Scheduling does not use GPIO. It can run on the same Pi as Zane.
+
+## Operations
+
+Full install: [pi/scheduling/README.md](../pi/scheduling/README.md).
+
+| Problem | Fix |
+| ------- | --- |
+| No speech at reminder time | `sudo apt install espeak-ng`; `systemctl status snoopy-scheduler` |
+| Wrong person's schedule | Re-enroll voice; use `cli.py voice` so ID runs before save |
+| Calendar empty | Check ICS URL for that `profileId`; `python cli.py show --profile toby` |

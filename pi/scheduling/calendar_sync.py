@@ -1,46 +1,12 @@
-"""Sync calendar events from a private ICS URL (Google / iCloud / Outlook feeds)."""
+"""Per-profile calendar sync from private ICS URLs."""
 
 from __future__ import annotations
 
-import json
-import threading
 import urllib.error
 import urllib.request
-from datetime import date, datetime, timedelta
-from pathlib import Path
+from datetime import datetime, timedelta
 
-from storage import DATA_DIR, load_config
-
-CACHE_FILE = DATA_DIR / "calendar_cache.json"
-_lock = threading.Lock()
-
-
-def _cache_path() -> Path:
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-    return CACHE_FILE
-
-
-def load_calendar_cache() -> dict:
-    path = _cache_path()
-
-    if not path.exists():
-        return {"syncedAt": None, "events": [], "error": None}
-
-    try:
-        with path.open(encoding="utf-8") as handle:
-            return json.load(handle)
-    except (OSError, json.JSONDecodeError):
-        return {"syncedAt": None, "events": [], "error": "cache_read_failed"}
-
-
-def save_calendar_cache(payload: dict) -> None:
-    with _lock:
-        path = _cache_path()
-        temp = path.with_suffix(".tmp")
-        with temp.open("w", encoding="utf-8") as handle:
-            json.dump(payload, handle, indent=2)
-            handle.write("\n")
-        temp.replace(path)
+from storage import get_profile_config, get_calendar_cache, set_calendar_cache
 
 
 def _parse_ics_datetime(value: str) -> datetime | None:
@@ -94,6 +60,7 @@ def parse_ics(text: str, lookahead_days: int) -> list[dict]:
                 "summary": safe_summary or "Calendar event",
                 "start": start.isoformat(),
                 "source": "calendar",
+                "profileId": None,
             }
         )
 
@@ -101,9 +68,9 @@ def parse_ics(text: str, lookahead_days: int) -> list[dict]:
     return events
 
 
-def sync_calendar(force: bool = False) -> dict:
-    config = load_config()
-    calendar = config.get("calendar", {})
+def sync_calendar(profile_id: str, force: bool = False) -> dict:
+    profile_config = get_profile_config(profile_id)
+    calendar = profile_config.get("calendar", {})
     enabled = bool(calendar.get("enabled"))
     ics_url = str(calendar.get("icsUrl", "")).strip()
     lookahead_days = int(calendar.get("lookaheadDays", 14) or 14)
@@ -114,11 +81,12 @@ def sync_calendar(force: bool = False) -> dict:
             "events": [],
             "error": None if not enabled else "missing_ics_url",
             "enabled": enabled,
+            "profileId": profile_id,
         }
-        save_calendar_cache(payload)
+        set_calendar_cache(profile_id, payload)
         return payload
 
-    cache = load_calendar_cache()
+    cache = get_calendar_cache(profile_id)
     sync_minutes = int(calendar.get("syncMinutes", 15) or 15)
 
     if not force and cache.get("syncedAt"):
@@ -142,19 +110,31 @@ def sync_calendar(force: bool = False) -> dict:
             "events": cache.get("events", []),
             "error": str(error)[:200],
             "enabled": True,
+            "profileId": profile_id,
         }
-        save_calendar_cache(payload)
+        set_calendar_cache(profile_id, payload)
         return payload
 
     events = parse_ics(body, lookahead_days)
+    for event in events:
+        event["profileId"] = profile_id
+
     payload = {
         "syncedAt": datetime.now().isoformat(),
         "events": events,
         "error": None,
         "enabled": True,
+        "profileId": profile_id,
     }
-    save_calendar_cache(payload)
+    set_calendar_cache(profile_id, payload)
     return payload
+
+
+def sync_all_calendars(force: bool = False) -> None:
+    from storage import list_profile_ids
+
+    for profile_id in list_profile_ids():
+        sync_calendar(profile_id, force=force)
 
 
 def events_due_now(cache: dict, window_minutes: int = 1) -> list[dict]:

@@ -144,8 +144,16 @@ sudo cp ~/snoopy/pi/systemd/snoopy-scheduler.service /etc/systemd/system/
 sudo systemctl enable --now snoopy-scheduler
 ```
 
-Use **http://localhost:8000/index-pi.html?pi=1** for voice reminders and routines.
-Details: [docs/SCHEDULING.md](../docs/SCHEDULING.md).
+Install **espeak-ng** for spoken reminders (no browser). Voice commands identify
+the speaker first, then save to **that person's** schedule and calendar.
+
+```bash
+sudo apt install -y espeak-ng
+cd ~/snoopy/pi/scheduling && source .venv/bin/activate
+python cli.py voice "hey snoopy remind me at 5 30 to feed the dog"
+```
+
+Details: [pi/scheduling/README.md](scheduling/README.md) and [docs/SCHEDULING.md](../docs/SCHEDULING.md).
 
 ---
 

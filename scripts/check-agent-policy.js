@@ -31,7 +31,6 @@ const extensionManifest = JSON.parse(fs.readFileSync(extensionManifestPath, "utf
 const speechLines = loadSpeechLines(appSource);
 const wakeWords = loadWakeWords(appSource);
 const lineEntries = Object.entries(speechLines);
-const messageTemplateKeys = new Set(["reminderDue", "routineDue", "calendarDue"]);
 
 if (wakeWords.length < 2) {
   fail("At least two wake phrases must be configured.");
@@ -50,10 +49,6 @@ if (lineEntries.length === 0) {
 for (const [key, line] of lineEntries) {
   if (!/\{name\}/.test(line)) {
     fail(`The "${key}" speech line must include the {name} placeholder.`);
-  }
-
-  if (messageTemplateKeys.has(key) && !/\{message\}/.test(line)) {
-    fail(`The "${key}" speech line must include the {message} placeholder.`);
   }
 
   if (!/^[\w\s.,'{}-]+$/.test(line)) {

@@ -1,9 +1,33 @@
 {
-  "calendar": {
-    "enabled": false,
-    "icsUrl": "",
-    "syncMinutes": 15,
-    "lookaheadDays": 14
-  },
-  "displayName": "Toby"
+  "defaultProfileId": "toby",
+  "guestProfileId": "guest",
+  "profiles": {
+    "toby": {
+      "displayName": "Toby",
+      "calendar": {
+        "enabled": false,
+        "icsUrl": "",
+        "syncMinutes": 15,
+        "lookaheadDays": 14
+      }
+    },
+    "mum": {
+      "displayName": "Mum",
+      "calendar": {
+        "enabled": false,
+        "icsUrl": "",
+        "syncMinutes": 15,
+        "lookaheadDays": 14
+      }
+    },
+    "guest": {
+      "displayName": "friend",
+      "calendar": {
+        "enabled": false,
+        "icsUrl": "",
+        "syncMinutes": 15,
+        "lookaheadDays": 14
+      }
+    }
+  }
 }
