@@ -21,8 +21,9 @@
         <p class="eyebrow">Raspberry Pi voice search</p>
         <h1 id="page-title">Hi, I am Snoopy.</h1>
         <p class="lede">
-          I listen on this Pi, recognize who is speaking, and use the right name
-          for each person. Voice prints never leave this device.
+          I start listening when this Pi boots — say a wake phrase and your search.
+          I recognize who is speaking and use the right name. Voice prints never
+          leave this device.
         </p>
       </section>
 
@@ -50,10 +51,15 @@
             </select>
           </label>
 
+          <label class="checkbox-field">
+            <input id="requireWakeWord" type="checkbox" checked />
+            <span>Wake phrase required (hey Snoopy, hi Snoopy, etc.)</span>
+          </label>
+
           <div class="button-row">
-            <button id="startButton" type="button">Start voice agent</button>
+            <button id="startButton" type="button">Turn on wake word listening</button>
             <button id="stopButton" type="button" class="secondary" disabled>
-              Stop listening
+              Pause Snoopy
             </button>
           </div>
         </div>
@@ -61,8 +67,8 @@
         <div class="transcript-panel">
           <p class="label">Last thing I heard</p>
           <p id="transcriptText" class="transcript">
-            Nothing yet. Press Start — I will learn who is speaking, then listen
-            for a search.
+            Nothing yet. Say "hey Snoopy" and your search — I learn who is speaking
+            as you talk.
           </p>
         </div>
 
