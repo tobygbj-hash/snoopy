@@ -34,6 +34,7 @@ const speechLines = {
   blocked: "{name}, your browser wants one extra click to open the results.",
   empty: "{name}, I did not catch a search phrase yet. Please try again.",
   stopped: "All set, {name}. I have stopped listening.",
+  stopReady: "{name}, say stop whenever you want me to pause.",
   handoffReady: "{name}, your private handoff file is ready.",
   cleared: "{name}, I cleared the screen details.",
   unsupported:
@@ -54,6 +55,8 @@ const wakeWords = [
   "yo snoopy",
 ];
 
+const stopPhrases = ["stop", "stop reading", "please stop", "snoopy stop", "stop listening"];
+
 const engineUrls = {
   bing: "https://www.bing.com/search",
   duckduckgo: "https://duckduckgo.com/",
@@ -64,6 +67,7 @@ let recognition = null;
 let isListening = false;
 let shouldRestart = false;
 let armedAfterWake = false;
+let armedForStop = false;
 let lastHeardPhrase = "";
 let reservedSearchWindow = null;
 let activeProfileId = null;
@@ -294,6 +298,35 @@ function requiresWakePhrase() {
   return Boolean(elements.requireWakeWord?.checked);
 }
 
+function remainderAfterWakeWords(transcript) {
+  let remainder = normalizeTranscript(transcript);
+
+  for (const phrase of wakeWords) {
+    if (remainder === phrase) {
+      return "";
+    }
+
+    const prefix = `${phrase} `;
+
+    if (remainder.startsWith(prefix)) {
+      remainder = remainder.slice(prefix.length).trim();
+    }
+  }
+
+  return remainder;
+}
+
+function isStopPhrase(transcript) {
+  const normalized = normalizeTranscript(transcript);
+  const afterWake = remainderAfterWakeWords(transcript);
+
+  return stopPhrases.includes(normalized) || stopPhrases.includes(afterWake);
+}
+
+function isWakePhraseOnly(transcript) {
+  return wakeWords.includes(normalizeTranscript(transcript));
+}
+
 function setAwaitingWakeVisual(isAwaiting) {
   elements.indicator.classList.toggle("is-awaiting-wake", isAwaiting);
 }
@@ -412,6 +445,33 @@ function handleTranscript(rawTranscript) {
   lastHeardPhrase = rawTranscript || "";
   elements.transcriptText.textContent = rawTranscript || "No words were detected.";
 
+  if (isStopPhrase(rawTranscript)) {
+    armedAfterWake = false;
+    armedForStop = false;
+    setAwaitingWakeVisual(false);
+    stopListening();
+    return;
+  }
+
+  if (isWakePhraseOnly(rawTranscript)) {
+    armedAfterWake = false;
+    armedForStop = true;
+    setAwaitingWakeVisual(true);
+    setStatus("stopReady");
+    speak("stopReady");
+    return;
+  }
+
+  if (armedForStop) {
+    armedForStop = false;
+    setAwaitingWakeVisual(false);
+
+    if (isStopPhrase(rawTranscript)) {
+      stopListening();
+      return;
+    }
+  }
+
   if (!requiresWakePhrase()) {
     processSearchQuery(rawTranscript);
     return;
@@ -421,9 +481,15 @@ function handleTranscript(rawTranscript) {
 
   if (wakeMatch.matched) {
     armedAfterWake = false;
+    armedForStop = false;
     setAwaitingWakeVisual(false);
 
     if (wakeMatch.remainder) {
+      if (isStopPhrase(wakeMatch.remainder)) {
+        stopListening();
+        return;
+      }
+
       processSearchQuery(wakeMatch.remainder);
       return;
     }
@@ -438,6 +504,12 @@ function handleTranscript(rawTranscript) {
   if (armedAfterWake) {
     armedAfterWake = false;
     setAwaitingWakeVisual(false);
+
+    if (isStopPhrase(rawTranscript)) {
+      stopListening();
+      return;
+    }
+
     processSearchQuery(rawTranscript);
     return;
   }
@@ -517,6 +589,7 @@ function downloadPrivateHandoff() {
 function clearScreenData() {
   lastHeardPhrase = "";
   armedAfterWake = false;
+  armedForStop = false;
   setAwaitingWakeVisual(false);
   elements.includeTranscript.checked = false;
   elements.transcriptText.textContent = `Nothing saved, ${getActiveDisplayName()}. Try saying "search sunrise photos".`;
@@ -573,6 +646,7 @@ async function startListening() {
 
   shouldRestart = true;
   armedAfterWake = false;
+  armedForStop = false;
   elements.fallbackPanel.hidden = true;
   reserveSearchWindow();
   setAwaitingWakeVisual(requiresWakePhrase());
@@ -600,6 +674,7 @@ async function startListening() {
 function stopListening() {
   shouldRestart = false;
   armedAfterWake = false;
+  armedForStop = false;
   setAwaitingWakeVisual(false);
 
   if (recognition && isListening) {

@@ -91,7 +91,9 @@ To install it for free:
 5. Select the `extension` folder.
 
 Then open a Google results page with an AI summary and click **Read AI
-summary**. Snoopy reads the summary aloud for Toby in the same tab.
+summary**. Snoopy reads the summary aloud for Toby in the same tab. Say **stop**
+or a wake phrase then **stop** (for example "hey Snoopy, stop") to stop with a
+kind reply.
 
 
 ## If Chrome blocks Developer Mode

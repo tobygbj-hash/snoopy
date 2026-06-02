@@ -12,9 +12,24 @@
     noSummary:
       "Toby, I could not find a Google AI summary on this page yet. Please open a Google results page with an AI summary and try again.",
     reading: "Reading the Google AI summary for Toby.",
+    stopped: "Of course, Toby. I have stopped reading for you.",
+    stopReady: "Sure, Toby. Say stop whenever you want me to pause.",
     unsupported:
       "Toby, this browser cannot read the summary aloud from this page.",
   };
+
+  const wakeWords = [
+    "wake up snoopy",
+    "attention snoopy",
+    "hello snoopy",
+    "hey snoopy",
+    "hi snoopy",
+    "okay snoopy",
+    "ok snoopy",
+    "yo snoopy",
+  ];
+
+  const stopCommands = ["stop", "stop reading", "please stop", "snoopy stop", "stop listening"];
 
   const blockedWordCodes = [
     [97, 115, 115, 104, 111, 108, 101],
@@ -34,6 +49,9 @@
   );
 
   let statusElement = null;
+  let stopRecognition = null;
+  let isReadingAloud = false;
+  let armedForStop = false;
 
   function installButton() {
     if (!isSupportedGoogleResultsPage()) {
@@ -72,7 +90,7 @@
     const spokenText = `${speechLines.intro} ${safeSummary}`;
 
     showStatus(speechLines.reading);
-    speak(spokenText);
+    speak(spokenText, { listenForStop: true });
 
     return { ok: true, message: speechLines.reading };
   }
@@ -169,19 +187,173 @@
     }, text);
   }
 
-  function speak(text) {
+  function normalizeCommand(transcript) {
+    return transcript
+      .trim()
+      .toLowerCase()
+      .replace(/[.,!?;:]+$/g, "")
+      .replace(/\s+/g, " ");
+  }
+
+  function remainderAfterWakeWords(transcript) {
+    let remainder = normalizeCommand(transcript);
+
+    for (const phrase of wakeWords) {
+      if (remainder === phrase) {
+        return "";
+      }
+
+      const prefix = `${phrase} `;
+
+      if (remainder.startsWith(prefix)) {
+        remainder = remainder.slice(prefix.length).trim();
+      }
+    }
+
+    return remainder;
+  }
+
+  function isStopCommand(transcript) {
+    const normalized = normalizeCommand(transcript);
+    const afterWake = remainderAfterWakeWords(transcript);
+
+    return stopCommands.includes(normalized) || stopCommands.includes(afterWake);
+  }
+
+  function isWakePhraseOnly(transcript) {
+    return wakeWords.includes(normalizeCommand(transcript));
+  }
+
+  function handleStopWhileReading() {
+    armedForStop = false;
+    cancelReading();
+    showStatus(speechLines.stopped);
+    speak(speechLines.stopped, { listenForStop: false });
+  }
+
+  function stopStopListener() {
+    if (!stopRecognition) {
+      return;
+    }
+
+    const recognition = stopRecognition;
+    stopRecognition = null;
+    recognition.onend = null;
+
+    try {
+      recognition.stop();
+    } catch (error) {
+      // Recognition may already be stopped.
+    }
+  }
+
+  function cancelReading() {
+    window.speechSynthesis.cancel();
+    isReadingAloud = false;
+    stopStopListener();
+  }
+
+
+  function startStopListener() {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition || null;
+
+    if (!SpeechRecognition) {
+      return;
+    }
+
+    stopStopListener();
+    stopRecognition = new SpeechRecognition();
+    stopRecognition.continuous = true;
+    stopRecognition.interimResults = false;
+    stopRecognition.lang = "en-US";
+
+    stopRecognition.addEventListener("result", (event) => {
+      const latestResult = event.results[event.results.length - 1];
+
+      if (!latestResult.isFinal || !isReadingAloud) {
+        return;
+      }
+
+      const transcript = latestResult[0].transcript;
+
+      if (isWakePhraseOnly(transcript)) {
+        armedForStop = true;
+        showStatus(speechLines.stopReady);
+        return;
+      }
+
+      if (isStopCommand(transcript)) {
+        handleStopWhileReading();
+      }
+    });
+
+    stopRecognition.addEventListener("end", () => {
+      if (!isReadingAloud || !stopRecognition) {
+        return;
+      }
+
+      try {
+        stopRecognition.start();
+      } catch (error) {
+        stopStopListener();
+      }
+    });
+
+    stopRecognition.addEventListener("error", () => {
+      if (isReadingAloud) {
+        stopStopListener();
+      }
+    });
+
+    try {
+      stopRecognition.start();
+    } catch (error) {
+      stopRecognition = null;
+    }
+  }
+
+  function speak(text, options = {}) {
+    const listenForStop = options.listenForStop === true;
+
     if (!("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)) {
       showStatus(speechLines.unsupported);
       return;
     }
 
-    window.speechSynthesis.cancel();
+    if (listenForStop) {
+      armedForStop = false;
+      cancelReading();
+    } else {
+      window.speechSynthesis.cancel();
+      isReadingAloud = false;
+      stopStopListener();
+    }
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "en-US";
     utterance.pitch = 1.12;
     utterance.rate = 0.96;
     utterance.volume = 0.9;
+
+    utterance.addEventListener("end", () => {
+      if (listenForStop) {
+        isReadingAloud = false;
+        stopStopListener();
+      }
+    });
+
+    utterance.addEventListener("error", () => {
+      if (listenForStop) {
+        isReadingAloud = false;
+        stopStopListener();
+      }
+    });
+
+    if (listenForStop) {
+      isReadingAloud = true;
+      startStopListener();
+    }
 
     window.speechSynthesis.speak(utterance);
   }
