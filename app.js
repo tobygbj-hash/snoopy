@@ -41,6 +41,12 @@ const speechLines = {
     "{name}, this browser does not support voice recognition here. You can still type a search in your browser.",
   error: "{name}, I had trouble hearing that. Please try again when you are ready.",
   speakerReady: "Hi {name}, I recognized your voice and I am ready to help.",
+  alwaysListeningReady:
+    "Hi {name}, I am listening now. Say a wake phrase and your search anytime.",
+  passiveListen: "Listening for hey Snoopy and your search, {name}.",
+  heardWake: "Go ahead, {name}.",
+  tapToEnable:
+    "{name}, turn on wake word listening once, then only say hey Snoopy and your search.",
 };
 
 // Longest phrases first so "wake up snoopy" wins over "hi snoopy".
@@ -71,6 +77,7 @@ let armedForStop = false;
 let lastHeardPhrase = "";
 let reservedSearchWindow = null;
 let activeProfileId = null;
+let alwaysListeningActive = false;
 
 function getSpeakerCatalog() {
   const catalog = window.SNOOPY_SPEAKER_CATALOG;
@@ -427,6 +434,18 @@ function openSearch(query) {
 
   setStatus("searching");
   speak("searching");
+  returnToPassiveListening();
+}
+
+function returnToPassiveListening() {
+  if (!alwaysListeningActive || !shouldRestart) {
+    return;
+  }
+
+  armedAfterWake = false;
+  armedForStop = false;
+  setAwaitingWakeVisual(requiresWakePhrase());
+  setStatus("passiveListen");
 }
 
 function processSearchQuery(rawTranscript) {
@@ -496,8 +515,12 @@ function handleTranscript(rawTranscript) {
 
     armedAfterWake = true;
     setAwaitingWakeVisual(true);
-    setStatus("wakeAcknowledged");
-    speak("wakeAcknowledged");
+    setStatus("heardWake");
+
+    if (!alwaysListeningActive) {
+      speak("wakeAcknowledged");
+    }
+
     return;
   }
 
@@ -622,57 +645,75 @@ function handleRecognitionEnd() {
       "is-awaiting-wake",
       requiresWakePhrase() && !armedAfterWake,
     );
+
+    if (alwaysListeningActive) {
+      setStatus("passiveListen");
+    }
   }
 }
 
-async function startListening() {
-  if (!recognition || isListening) {
-    return;
+function updateAlwaysListeningUi() {
+  const enabled = alwaysListeningActive && shouldRestart;
+
+  if (elements.startButton) {
+    elements.startButton.hidden = enabled;
+    elements.startButton.disabled = enabled;
   }
 
-  elements.startButton.disabled = true;
+  if (elements.stopButton) {
+    elements.stopButton.disabled = !enabled;
+  }
+}
+
+async function enableAlwaysListening() {
+  if (!recognition || isListening || alwaysListeningActive) {
+    return;
+  }
 
   if (isPiListenerMode()) {
     elements.statusText.textContent = "Listening to who is speaking…";
     const identified = await identifySpeakerOnPi();
 
     if (identified?.profileId) {
-      setActiveProfile(identified.profileId, { speakKey: "speakerReady" });
+      setActiveProfile(identified.profileId);
     } else {
       const catalog = getSpeakerCatalog();
-      setActiveProfile(catalog.guestProfileId || "guest", { speakKey: "ready" });
+      setActiveProfile(catalog.guestProfileId || "guest");
     }
   }
 
+  alwaysListeningActive = true;
   shouldRestart = true;
   armedAfterWake = false;
   armedForStop = false;
   elements.fallbackPanel.hidden = true;
   reserveSearchWindow();
   setAwaitingWakeVisual(requiresWakePhrase());
-
-  if (requiresWakePhrase()) {
-    setStatus("awaitingWake");
-    speak("awaitingWake");
-  } else {
-    setStatus("listening");
-    speak("listening");
-  }
+  setStatus("passiveListen");
+  speak("alwaysListeningReady");
 
   try {
     recognition.start();
     setListeningState(true);
+    updateAlwaysListeningUi();
   } catch (error) {
+    alwaysListeningActive = false;
     shouldRestart = false;
     closeReservedSearchWindow();
     setListeningState(false);
+    updateAlwaysListeningUi();
     setStatus("error");
     speak("error");
   }
 }
 
+async function startListening() {
+  await enableAlwaysListening();
+}
+
 function stopListening() {
   shouldRestart = false;
+  alwaysListeningActive = false;
   armedAfterWake = false;
   armedForStop = false;
   setAwaitingWakeVisual(false);
@@ -683,6 +724,7 @@ function stopListening() {
 
   closeReservedSearchWindow();
   setListeningState(false);
+  updateAlwaysListeningUi();
   setStatus("stopped");
   speak("stopped");
 }
@@ -703,15 +745,18 @@ function setupSpeechRecognition() {
   recognition.addEventListener("end", handleRecognitionEnd);
   recognition.addEventListener("error", () => {
     shouldRestart = false;
+    alwaysListeningActive = false;
     armedAfterWake = false;
     setAwaitingWakeVisual(false);
     closeReservedSearchWindow();
     setListeningState(false);
+    updateAlwaysListeningUi();
     setStatus("error");
     speak("error");
   });
 
-  setStatus("ready");
+  setStatus("tapToEnable");
+  updateAlwaysListeningUi();
 }
 
 async function initializeSpeakerProfiles() {
@@ -725,13 +770,22 @@ async function initializeSpeakerProfiles() {
 
   populateSpeakerSelect();
   setActiveProfile(getActiveProfileId());
-  setStatus("ready");
+
+  if (!alwaysListeningActive) {
+    setStatus("tapToEnable");
+  }
+
+  if (isPiListenerMode()) {
+    window.setTimeout(() => {
+      enableAlwaysListening();
+    }, 0);
+  }
 }
 
 elements.clearDataButton.addEventListener("click", clearScreenData);
 elements.downloadHandoffButton.addEventListener("click", downloadPrivateHandoff);
 elements.startButton.addEventListener("click", () => {
-  startListening();
+  enableAlwaysListening();
 });
 elements.stopButton.addEventListener("click", stopListening);
 elements.activeSpeaker?.addEventListener("change", () => {
