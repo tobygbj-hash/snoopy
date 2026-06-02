@@ -148,26 +148,45 @@ mkdir -p ~/.config/autostart
 cp ~/snoopy/pi/autostart/snoopy-kiosk.desktop ~/.config/autostart/
 ```
 
-Log out and back in (or reboot). Chromium should open kiosk-style to Snoopy.
+Log out and back in (or reboot). Chromium opens **index-pi.html** in kiosk mode and
+tries to start listening automatically.
+
+The kiosk file includes `--use-fake-ui-for-media-stream` so the Pi does **not**
+ask for a microphone click on every boot (for your home Snoopy device only).
 
 **Manual test first** (before relying on autostart):
 
 ```bash
 chromium-browser \
+  --use-fake-ui-for-media-stream \
   --load-extension=$HOME/snoopy/extension \
   --unsafely-treat-insecure-origin-as-secure=http://localhost:8000 \
-  http://localhost:8000
+  http://localhost:8000/index-pi.html?pi=1
 ```
 
-Allow the microphone when Snoopy asks.
+---
+
+## Will Toby have to click anything on the Pi?
+
+| When | Clicks? |
+| ---- | ------- |
+| **After setup, every day** | **No** — just say "hey Snoopy" and your search |
+| **First-time setup** | Yes — install OS, enroll voices, allow mic once if not using the kiosk flag above |
+| **Reading AI summaries** | Click the bookmark once per results page (extension), or automate later |
+
+Snoopy on the Pi is meant to stay in **always listen** mode: wake phrase → search,
+no **Turn on** button before each search.
+
+If the orange dot shows "turn on wake word listening" after boot, the mic did not
+start — check USB mic and run the manual test command above.
 
 ---
 
 ## Phase 6 — Use it like a home speaker
 
-1. Click **Start voice agent** once (or wire a GPIO button later).
-2. Say a wake phrase, then your search (see the main README).
-3. When Google results open on the Pi, tap **Read AI summary** or use the extension popup.
+1. Say a wake phrase, then your search (see the main README). No button before each search.
+2. When Google results open on the Pi, tap **Read AI summary** or use the extension popup.
+3. Say **stop** (or a wake phrase plus stop) to halt reading the AI summary.
 
 **Tip:** Log into Google once in that Chromium profile if AI Overviews do not appear.
 
@@ -185,7 +204,7 @@ page). For a future **no-Chromium** version, see Phase 7 below.
 
 | Upgrade | What it adds |
 | ------- | ------------- |
-| Wake word on device | [openWakeWord](https://github.com/dscripka/openWakeWord) listens for "hey Snoopy" without clicking Start |
+| Wake word on device | [openWakeWord](https://github.com/dscripka/openWakeWord) listens for "hey Snoopy" without Chromium always-on mic |
 | Auto-read summary | Small script clicks "Read AI summary" after results load |
 | Headless reader | Node + Playwright reuses extension logic without a visible window |
 | Better voice | Piper TTS on the Pi instead of browser `speechSynthesis` |
