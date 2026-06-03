@@ -20,8 +20,9 @@ commits, Raspberry Pi notes). **Contributing:** [CONTRIBUTING.md](CONTRIBUTING.m
 
 ## Raspberry Pi (laptop off, Pi in the room)
 
-To run Snoopy on a Pi with the Google AI summary reader — without keeping a
-laptop on — follow **[pi/README.md](pi/README.md)**.
+**Keep it simple:** start with **[pi/MVP.md](pi/MVP.md)** (reminders + speaker, no browser).
+
+Full Pi guide (optional kiosk, extension): **[pi/README.md](pi/README.md)**.
 
 ## Run locally
 

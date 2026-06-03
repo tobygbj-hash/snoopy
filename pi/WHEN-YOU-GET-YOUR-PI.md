@@ -1,37 +1,26 @@
 # When your Raspberry Pi arrives
 
-Everything below is already in the repo. You do **not** need a laptop in the room after setup.
+**Start here:** [MVP.md](MVP.md) — one short path, optional steps clearly marked.
 
-## Before the Pi ships to you (any computer)
+You do **not** need Chromium, the extension, or a laptop in the room for reminders.
 
-1. Merge open pull requests for Snoopy on GitHub (especially scheduling).
-2. Clone: `git clone https://github.com/tobygbj-hash/snoopy.git`
+## Minimum checklist
 
-## On the Pi — first hour
+1. Flash Raspberry Pi OS + Wi‑Fi ([README.md](README.md) Phase 1).
+2. Follow **[MVP.md](MVP.md)** — install `snoopy-scheduler`, hear one test reminder.
+3. Enroll voices only if more than one person will use it.
+4. Add phone calendars later if you want them.
 
-| Order | What | Doc |
-| ----- | ---- | --- |
-| 1 | Flash Raspberry Pi OS, Wi‑Fi, SSH | [pi/README.md](README.md) Phase 1 |
-| 2 | `git clone` and `npm test` in `~/snoopy` | [docs/OPERATIONS.md](../docs/OPERATIONS.md) |
-| 3 | Web server at boot (optional, for voice search) | `pi/README.md` Phase 3 |
-| 4 | **Scheduling** (reminders, routines, calendars) | [pi/scheduling/README.md](scheduling/README.md) |
-| 5 | Enroll each voice (`toby`, `mum`, …) | [pi/speaker-id/README.md](speaker-id/README.md) |
-| 6 | Bluetooth speaker + USB mic | `pi/README.md` |
+## Verify the repo (no Pi required)
 
-## Quick test (no browser)
+On any computer:
 
 ```bash
-sudo apt install -y espeak-ng
-cd ~/snoopy/pi/scheduling && source .venv/bin/activate
-python cli.py remind --profile toby --at "$(date +%H:%M)" --message "Pi is ready"
-# Wait one minute — you should hear the reminder
+git clone https://github.com/tobygbj-hash/snoopy.git
+cd snoopy
+npm test
 ```
 
-## Zane RC car on the same Pi
+## Zane
 
-Scheduling does not use GPIO. Zane and Snoopy can share one Pi if RAM is enough (Pi 4 with 2 GB+ recommended).
-
-## Help
-
-- [docs/SCHEDULING.md](../docs/SCHEDULING.md)
-- [docs/START.md](../docs/START.md) if a page will not load
+Your RC car project can stay on the same Pi; scheduling does not use GPIO.

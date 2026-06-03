@@ -76,14 +76,19 @@ class SchedulingTests(unittest.TestCase):
             {
                 "profileId": "toby",
                 "displayName": "Toby",
-                "time": datetime.now().strftime("%H:%M"),
+                "time": "12:00",
                 "message": "now test",
                 "identify": False,
             }
         )
 
+        fixed_now = datetime.now().replace(hour=12, minute=0, second=0, microsecond=0)
+
         with patch.object(scheduler_engine, "speak_line") as speak_mock:
-            scheduler_engine.tick()
+            with patch.object(scheduler_engine, "datetime") as dt_mock:
+                dt_mock.now.return_value = fixed_now
+                dt_mock.side_effect = lambda *args, **kwargs: datetime(*args, **kwargs)
+                scheduler_engine.tick()
             self.assertTrue(speak_mock.called)
 
         data = storage.load_data()
@@ -94,14 +99,19 @@ class SchedulingTests(unittest.TestCase):
             {
                 "profileId": "toby",
                 "displayName": "Toby",
-                "time": datetime.now().strftime("%H:%M"),
+                "time": "12:00",
                 "message": "once",
                 "identify": False,
             }
         )
 
+        fixed_now = datetime.now().replace(hour=12, minute=0, second=0, microsecond=0)
+
         with patch.object(scheduler_engine, "speak_line"):
-            scheduler_engine.tick()
+            with patch.object(scheduler_engine, "datetime") as dt_mock:
+                dt_mock.now.return_value = fixed_now
+                dt_mock.side_effect = lambda *args, **kwargs: datetime(*args, **kwargs)
+                scheduler_engine.tick()
 
         data = storage.load_data()
         reminder = data["profiles"]["toby"]["reminders"][0]

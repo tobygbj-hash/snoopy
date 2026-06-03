@@ -1,8 +1,11 @@
 # Snoopy on Raspberry Pi (no laptop in the room)
 
-Your **laptop can stay off**. The Pi stays on a shelf, listens through a USB mic,
-speaks through a speaker, and runs Snoopy in Chromium. The same Chrome extension
-reads Google AI summaries aloud for Toby.
+**Start simple:** [MVP.md](MVP.md) — reminders on the Pi first (no browser).
+This file is the **full** guide including optional Chromium and the extension.
+
+Your **laptop can stay off**. The Pi can stay on a shelf with a USB mic and
+speaker. The **simplest** setup is only the scheduling service (spoken reminders).
+Chromium + extension are **optional** for voice web search and Google summaries.
 
 ```mermaid
 flowchart LR
